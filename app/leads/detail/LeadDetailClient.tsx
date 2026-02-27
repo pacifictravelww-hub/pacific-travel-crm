@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   ArrowRight, Loader2, ChevronRight, Phone, Mail, MapPin, Calendar,
   Users, DollarSign, FileText, MessageCircle, Plus, X, CheckCircle2,
-  Clock, AlertCircle, Send
+  Clock, AlertCircle, Send, Pencil, Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,7 @@ import {
   HOTEL_LEVEL_LABELS, BOARD_BASIS_LABELS, VACATION_TYPE_LABELS, SOURCE_LABELS,
   WHATSAPP_TEMPLATES,
 } from '@/lib/data';
-import { getLead, updateLead, getDocuments, addDocument } from '@/lib/leads';
+import { getLead, updateLead, deleteLead, getDocuments, addDocument } from '@/lib/leads';
 
 const STATUS_ORDER: LeadStatus[] = ['lead', 'proposal_sent', 'paid', 'flying', 'returned'];
 
@@ -70,11 +70,15 @@ export default function LeadProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showDocModal, setShowDocModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [docForm, setDocForm] = useState({ type: 'passport', name: '', expiry_date: '' });
 
   useEffect(() => {
     Promise.all([getLead(id), getDocuments(id)]).then(([lead, docs]) => {
       setLead(lead);
+      setEditForm(lead || {});
       setDocuments(docs);
       setLoading(false);
     });
@@ -95,6 +99,20 @@ export default function LeadProfilePage() {
   const saveNotes = async (notes: string) => {
     if (!lead) return;
     await updateLead(id, { notes });
+  };
+
+  const handleDelete = async () => {
+    const ok = await deleteLead(id);
+    if (ok) router.push('/leads');
+  };
+
+  const handleEdit = async () => {
+    if (!lead) return;
+    setSaving(true);
+    const updated = await updateLead(id, editForm);
+    if (updated) setLead(updated);
+    setSaving(false);
+    setShowEditModal(false);
   };
 
   const handleAddDocument = async () => {
@@ -170,7 +188,96 @@ export default function LeadProfilePage() {
             )}
           </div>
         </div>
+        {/* Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { setEditForm(lead); setShowEditModal(true); }}>
+            <Pencil className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">ערוך</span>
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => setShowDeleteConfirm(true)}>
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">מחק</span>
+          </Button>
+        </div>
       </div>
+
+      {/* Delete Confirm Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>מחיקת ליד</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-600 py-2">האם אתה בטוח שברצונך למחוק את הליד של <strong>{lead.name}</strong>? פעולה זו אינה ניתנת לביטול.</p>
+          <div className="flex gap-2 pt-2">
+            <Button variant="destructive" className="flex-1" onClick={handleDelete}>כן, מחק</Button>
+            <Button variant="outline" className="flex-1" onClick={() => setShowDeleteConfirm(false)}>ביטול</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>עריכת ליד — {lead.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>שם מלא</Label>
+                <Input className="mt-1" value={editForm.name || ''} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div>
+                <Label>טלפון</Label>
+                <Input className="mt-1" value={editForm.phone || ''} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} />
+              </div>
+              <div>
+                <Label>אימייל</Label>
+                <Input className="mt-1" type="email" value={editForm.email || ''} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+              </div>
+              <div>
+                <Label>יעד</Label>
+                <Input className="mt-1" value={editForm.destination || ''} onChange={e => setEditForm(f => ({ ...f, destination: e.target.value }))} />
+              </div>
+              <div>
+                <Label>תאריך יציאה</Label>
+                <Input className="mt-1" type="date" value={editForm.departure_date?.slice(0,10) || ''} onChange={e => setEditForm(f => ({ ...f, departure_date: e.target.value }))} />
+              </div>
+              <div>
+                <Label>תאריך חזרה</Label>
+                <Input className="mt-1" type="date" value={editForm.return_date?.slice(0,10) || ''} onChange={e => setEditForm(f => ({ ...f, return_date: e.target.value }))} />
+              </div>
+              <div>
+                <Label>תקציב (₪)</Label>
+                <Input className="mt-1" type="number" value={editForm.budget || ''} onChange={e => setEditForm(f => ({ ...f, budget: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <Label>מחיר כולל (₪)</Label>
+                <Input className="mt-1" type="number" value={editForm.total_price || ''} onChange={e => setEditForm(f => ({ ...f, total_price: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <Label>מבוגרים</Label>
+                <Input className="mt-1" type="number" min={1} value={editForm.adults || 1} onChange={e => setEditForm(f => ({ ...f, adults: Number(e.target.value) }))} />
+              </div>
+              <div>
+                <Label>ילדים</Label>
+                <Input className="mt-1" type="number" min={0} value={editForm.children || 0} onChange={e => setEditForm(f => ({ ...f, children: Number(e.target.value) }))} />
+              </div>
+            </div>
+            <div>
+              <Label>הערות</Label>
+              <Textarea className="mt-1" value={editForm.notes || ''} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button className="flex-1" onClick={handleEdit} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
+                שמור שינויים
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>ביטול</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Status Bar */}
       <Card className="mb-6 border-2 border-slate-200">
@@ -198,7 +305,7 @@ export default function LeadProfilePage() {
               className={`w-full md:w-auto ${STATUS_NEXT_COLORS[lead.status]} text-white font-semibold py-2 px-6`}
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
-              קדם לשלב: {LEAD_STATUS_LABELS[nextStatus]} →
+              ← קדם לשלב: {LEAD_STATUS_LABELS[nextStatus]}
             </Button>
           )}
           {!nextStatus && (

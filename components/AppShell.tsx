@@ -85,11 +85,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <UserProvider>
       <MobileNav />
-      <div className="flex min-h-screen bg-slate-50">
+      <div className="flex h-screen bg-slate-50 overflow-hidden">
         <div className="hidden md:flex">
           <Sidebar />
         </div>
-        <main className="flex-1 overflow-auto w-full">
+        <main className="flex-1 overflow-y-auto w-full">
           {children}
         </main>
       </div>
