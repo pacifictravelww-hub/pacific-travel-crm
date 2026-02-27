@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, UserCheck, Settings, Plane,
-  MessageCircle, BarChart3, FileText, Menu, X,
+  MessageCircle, BarChart3, FileText, Menu, X, HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,7 @@ const navItems = [
   { href: '/automations', label: 'אוטומציות', icon: MessageCircle },
   { href: '/reports', label: 'דוחות', icon: BarChart3 },
   { href: '/documents', label: 'מסמכים', icon: FileText },
+  { href: '/help', label: 'עזרה', icon: HelpCircle },
 ];
 
 export default function MobileNav() {

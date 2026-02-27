@@ -11,6 +11,7 @@ import {
   MessageCircle,
   BarChart3,
   FileText,
+  HelpCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/automations', label: 'אוטומציות', icon: MessageCircle },
   { href: '/reports', label: 'דוחות', icon: BarChart3 },
   { href: '/documents', label: 'מסמכים', icon: FileText },
+  { href: '/help', label: 'עזרה', icon: HelpCircle },
 ];
 
 export default function Sidebar() {
