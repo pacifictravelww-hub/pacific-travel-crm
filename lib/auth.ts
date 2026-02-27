@@ -16,3 +16,13 @@ export async function getUser() {
   const { data: { user } } = await supabase.auth.getUser()
   return user
 }
+
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : '/',
+    },
+  })
+  return { data, error }
+}
