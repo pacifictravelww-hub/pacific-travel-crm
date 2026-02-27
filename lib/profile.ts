@@ -6,6 +6,9 @@ export type Profile = {
   full_name: string;
   role: 'developer' | 'admin' | 'agent' | 'customer';
   is_active: boolean;
+  phone?: string;
+  status?: string;
+  avatar_url?: string;
   created_at: string;
   updated_at: string;
 };

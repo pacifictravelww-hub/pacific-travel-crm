@@ -145,6 +145,12 @@ export default function SettingsPage() {
   const [newRole, setNewRole] = useState('agent');
   const [addingUser, setAddingUser] = useState(false);
   const [addMsg, setAddMsg] = useState('');
+  const [editingUser, setEditingUser] = useState<Profile | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editRole, setEditRole] = useState('agent');
+  const [editPhone, setEditPhone] = useState('');
+  const [editActive, setEditActive] = useState(true);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -219,12 +225,40 @@ export default function SettingsPage() {
     loadUsers();
   };
 
+  const openEditUser = (u: Profile) => {
+    setEditingUser(u);
+    setEditName(u.full_name || '');
+    setEditRole(u.role || 'agent');
+    setEditPhone(u.phone || '');
+    setEditActive(u.is_active !== false);
+  };
+
+  const handleSaveEditUser = async () => {
+    if (!editingUser) return;
+    setSavingEdit(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: editName, role: editRole, phone: editPhone, is_active: editActive, updated_at: new Date().toISOString() })
+      .eq('id', editingUser.id);
+    // Also update app_metadata role via service
+    if (!error) {
+      await fetch('/api/admin/update-user-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: editingUser.id, role: editRole }),
+      }).catch(() => {});
+      loadUsers();
+      setEditingUser(null);
+    }
+    setSavingEdit(false);
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto" dir="rtl">
       <h1 className="text-2xl font-bold text-slate-800 mb-6">הגדרות</h1>
 
-      <Tabs defaultValue="profile">
-        <TabsList className="mb-6 w-full justify-start">
+      <Tabs defaultValue="profile" dir="rtl">
+        <TabsList className="mb-6 w-full justify-end flex-row-reverse">
           <TabsTrigger value="profile">פרופיל</TabsTrigger>
           <TabsTrigger value="users" onClick={loadUsers}>ניהול משתמשים</TabsTrigger>
           {(profile?.role === 'admin' || profile?.role === 'developer') && (
@@ -352,12 +386,22 @@ export default function SettingsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditUser(u)}
+                                className="text-blue-600 hover:text-blue-800"
+                                title="ערוך משתמש"
+                              >
+                                ✏️
+                              </Button>
                               {u.is_active && u.id !== user?.id && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeactivate(u.id)}
                                   className="text-slate-500 hover:text-red-500"
+                                  title="השבת משתמש"
                                 >
                                   <UserX className="w-4 h-4" />
                                 </Button>
@@ -561,6 +605,53 @@ export default function SettingsPage() {
             <Button variant="outline" onClick={() => setShowAddUser(false)}>ביטול</Button>
             <Button onClick={handleAddUser} disabled={addingUser || !newEmail}>
               {addingUser ? 'שולח...' : 'שלח הזמנה'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Modal */}
+      <Dialog open={!!editingUser} onOpenChange={open => !open && setEditingUser(null)}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>עריכת משתמש — {editingUser?.email}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>שם מלא</Label>
+              <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="שם מלא" />
+            </div>
+            <div className="space-y-2">
+              <Label>טלפון</Label>
+              <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="050-0000000" className="ltr" />
+            </div>
+            <div className="space-y-2">
+              <Label>תפקיד</Label>
+              <Select value={editRole} onValueChange={setEditRole}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="developer">👑 מפתח</SelectItem>
+                  <SelectItem value="admin">⭐ מנהל</SelectItem>
+                  <SelectItem value="agent">סוכן</SelectItem>
+                  <SelectItem value="customer">לקוח</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="edit-active"
+                checked={editActive}
+                onChange={e => setEditActive(e.target.checked)}
+                className="w-4 h-4 accent-blue-600"
+              />
+              <Label htmlFor="edit-active" className="cursor-pointer">משתמש פעיל</Label>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 mt-4">
+            <Button variant="outline" onClick={() => setEditingUser(null)}>ביטול</Button>
+            <Button onClick={handleSaveEditUser} disabled={savingEdit}>
+              {savingEdit ? 'שומר...' : 'שמור שינויים'}
             </Button>
           </DialogFooter>
         </DialogContent>
