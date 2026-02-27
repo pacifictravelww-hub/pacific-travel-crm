@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { Lead, LeadStatus, MOCK_LEADS } from './data'
+import { Lead, LeadStatus, Document, MOCK_LEADS, MOCK_DOCUMENTS } from './data'
 
 export async function getLeads(): Promise<Lead[]> {
   try {
@@ -14,7 +14,6 @@ export async function getLeads(): Promise<Lead[]> {
     }
 
     if (!data || data.length === 0) {
-      // Return mock data as fallback if DB is empty
       return MOCK_LEADS
     }
 
@@ -42,6 +41,27 @@ export async function getLead(id: string): Promise<Lead | null> {
   } catch (err) {
     console.error('Error fetching lead:', err)
     return MOCK_LEADS.find(l => l.id === id) || null
+  }
+}
+
+export async function updateLead(id: string, updates: Partial<Lead>): Promise<Lead | null> {
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error updating lead:', error)
+      return null
+    }
+
+    return data as Lead
+  } catch (err) {
+    console.error('Error updating lead:', err)
+    return null
   }
 }
 
@@ -84,25 +104,6 @@ export async function updateLeadStatus(id: string, status: LeadStatus): Promise<
   }
 }
 
-export async function updateLead(id: string, updates: Partial<Lead>): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('leads')
-      .update(updates)
-      .eq('id', id)
-
-    if (error) {
-      console.error('Supabase error updating lead:', error)
-      return false
-    }
-
-    return true
-  } catch (err) {
-    console.error('Error updating lead:', err)
-    return false
-  }
-}
-
 export async function deleteLead(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -119,5 +120,49 @@ export async function deleteLead(id: string): Promise<boolean> {
   } catch (err) {
     console.error('Error deleting lead:', err)
     return false
+  }
+}
+
+export async function getDocuments(leadId: string): Promise<Document[]> {
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('uploaded_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase error fetching documents:', error)
+      return MOCK_DOCUMENTS.filter(d => d.lead_id === leadId)
+    }
+
+    if (!data || data.length === 0) {
+      return MOCK_DOCUMENTS.filter(d => d.lead_id === leadId)
+    }
+
+    return data as Document[]
+  } catch (err) {
+    console.error('Error fetching documents:', err)
+    return MOCK_DOCUMENTS.filter(d => d.lead_id === leadId)
+  }
+}
+
+export async function addDocument(doc: Omit<Document, 'id' | 'uploaded_at'>): Promise<Document | null> {
+  try {
+    const { data, error } = await supabase
+      .from('documents')
+      .insert([{ ...doc, uploaded_at: new Date().toISOString() }])
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Supabase error adding document:', error)
+      return null
+    }
+
+    return data as Document
+  } catch (err) {
+    console.error('Error adding document:', err)
+    return null
   }
 }

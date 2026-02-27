@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, UserCheck, Settings, Plane,
-  MessageCircle, BarChart3, FileText, Menu, X, HelpCircle,
+  MessageCircle, BarChart3, FileText, Menu, X, HelpCircle, LogOut,
 } from 'lucide-react';
+import { signOut } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -22,6 +24,13 @@ const navItems = [
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    setOpen(false);
+    await signOut();
+    router.push('/login');
+  };
 
   return (
     <>
@@ -132,8 +141,8 @@ export default function MobileNav() {
           })}
         </nav>
 
-        {/* Settings */}
-        <div className="p-4 border-t border-slate-700">
+        {/* Settings + Logout */}
+        <div className="p-4 border-t border-slate-700 space-y-1">
           <Link
             href="/settings"
             onClick={() => setOpen(false)}
@@ -142,6 +151,13 @@ export default function MobileNav() {
             <Settings className="w-4 h-4" />
             <span>הגדרות</span>
           </Link>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:bg-red-900/30 hover:text-red-400 transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>התנתק</span>
+          </button>
         </div>
       </aside>
     </>
