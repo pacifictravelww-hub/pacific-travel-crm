@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Users, FileText, CreditCard, Bell } from 'lucide-react';
+import { ChevronDown, ChevronUp, HelpCircle, Users, FileText, CreditCard, Bell, ArrowRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
 interface FAQItem {
@@ -13,37 +15,41 @@ interface Section {
   id: string;
   icon: React.ReactNode;
   title: string;
+  color: string;
   steps?: { title: string; description: string }[];
+  faqs?: FAQItem[];
 }
 
 const sections: Section[] = [
   {
     id: 'leads',
-    icon: <Users className="w-4 h-4" />,
+    icon: <Users className="w-5 h-5" />,
     title: 'ניהול לידים',
+    color: 'blue',
     steps: [
       {
-        title: 'ליד נכנס',
+        title: '1. ליד נכנס',
         description: 'ליד מגיע מפייסבוק, וואטסאפ או הכנסה ידנית. לוחצים על "ליד חדש" וממלאים את הפרטים: שם, טלפון, מייל, תאריכים, תקציב וסוג חופשה.',
       },
       {
-        title: 'יצירת קשר',
+        title: '2. יצירת קשר',
         description: 'מיד לאחר קבלת הליד יוצרים קשר עם הלקוח. מעדכנים הערות בפרופיל ומזיזים את הסטטוס ל"הצעה נשלחה" לאחר שנשלחה הצעת מחיר.',
       },
       {
-        title: 'מעקב סטטוס',
+        title: '3. מעקב סטטוס',
         description: 'גוררים את הכרטיס בלוח הקאנבן לפי מצב: ליד ← הצעה נשלחה ← שולם ← טס ← חזר.',
       },
       {
-        title: 'סגירת עסקה',
+        title: '4. סגירת עסקה',
         description: 'לאחר תשלום מקדמה — מזיזים ל"שולם". מעלים מסמכים (כרטיסים, ווצ\'רים). לאחר הטיסה — מזיזים ל"חזר" ומבקשים פידבק.',
       },
     ],
   },
   {
     id: 'profile',
-    icon: <FileText className="w-4 h-4" />,
+    icon: <FileText className="w-5 h-5" />,
     title: 'פרופיל לקוח',
+    color: 'purple',
     steps: [
       {
         title: 'פרטים אישיים',
@@ -61,8 +67,9 @@ const sections: Section[] = [
   },
   {
     id: 'payments',
-    icon: <CreditCard className="w-4 h-4" />,
+    icon: <CreditCard className="w-5 h-5" />,
     title: 'תשלומים',
+    color: 'green',
     steps: [
       {
         title: 'מקדמה',
@@ -80,8 +87,9 @@ const sections: Section[] = [
   },
   {
     id: 'automations',
-    icon: <Bell className="w-4 h-4" />,
+    icon: <Bell className="w-5 h-5" />,
     title: 'אוטומציות',
+    color: 'orange',
     steps: [
       {
         title: 'אישור פנייה',
@@ -114,7 +122,7 @@ const faqs: FAQItem[] = [
   },
   {
     q: 'איך יודעים שדרכון עומד לפוג?',
-    a: 'המערכת מסמנת מסמכים שתוקפם עומד לפוג ב-6 חודשים הקרובים.',
+    a: 'המערכת מסמנת בצהוב/אדום מסמכים שתוקפם עומד לפוג ב-6 חודשים הקרובים.',
   },
   {
     q: 'מה קורה אם לקוח לא משלם בזמן?',
@@ -129,153 +137,132 @@ const faqs: FAQItem[] = [
 function FAQAccordion({ items }: { items: FAQItem[] }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <div>
+    <div className="space-y-2">
       {items.map((item, i) => (
-        <div key={i} className="border-t border-black">
+        <div key={i} className="border rounded-lg overflow-hidden">
           <button
-            className="w-full text-right py-4 px-0 flex justify-between items-center hover:bg-black hover:text-white transition-colors duration-100 px-4 group"
+            className="w-full text-right p-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
             onClick={() => setOpen(open === i ? null : i)}
           >
-            <span
-              className="font-medium text-sm"
-              style={{ fontFamily: 'var(--font-frank-ruhl), serif' }}
-            >
-              {item.q}
-            </span>
-            {open === i
-              ? <ChevronUp className="w-4 h-4 shrink-0" />
-              : <ChevronDown className="w-4 h-4 shrink-0" />
-            }
+            <span className="font-medium text-gray-800">{item.q}</span>
+            {open === i ? <ChevronUp className="w-4 h-4 text-gray-500 shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />}
           </button>
           {open === i && (
-            <div
-              className="px-4 pb-4 text-sm text-muted-600 border-t border-muted-200"
-              style={{ fontFamily: 'var(--font-source-serif), serif' }}
-            >
+            <div className="px-4 pb-4 text-gray-600 text-sm border-t bg-gray-50">
               <p className="pt-3">{item.a}</p>
             </div>
           )}
         </div>
       ))}
-      <div className="border-t border-black" />
     </div>
   );
 }
 
+const colorMap: Record<string, string> = {
+  blue: 'bg-blue-50 border-blue-200 text-blue-700',
+  purple: 'bg-purple-50 border-purple-200 text-purple-700',
+  green: 'bg-green-50 border-green-200 text-green-700',
+  orange: 'bg-orange-50 border-orange-200 text-orange-700',
+};
+
+const iconBgMap: Record<string, string> = {
+  blue: 'bg-blue-100 text-blue-600',
+  purple: 'bg-purple-100 text-purple-600',
+  green: 'bg-green-100 text-green-600',
+  orange: 'bg-orange-100 text-orange-600',
+};
+
 export default function HelpPage() {
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
   return (
-    <div className="min-h-screen bg-white" dir="rtl">
-      {/* Breadcrumb */}
-      <div
-        className="border-b border-muted-300 px-8 py-3 text-xs tracking-widest uppercase text-muted-500 flex items-center gap-2"
-        style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-      >
-        <Link href="/" className="hover:text-black">דשבורד</Link>
-        <span>·</span>
-        <span className="text-black">עזרה</span>
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4 flex items-center gap-3">
+        <Link href="/" className="text-gray-400 hover:text-gray-600 text-sm">דשבורד</Link>
+        <ArrowRight className="w-3 h-3 text-gray-400 rotate-180" />
+        <span className="text-gray-700 font-medium">עזרה</span>
       </div>
 
-      <div className="max-w-3xl mx-auto px-8 py-12">
-        {/* Hero */}
-        <div className="mb-12 pb-8 border-b-4 border-black">
-          <h1
-            className="text-6xl font-bold italic mb-3"
-            style={{ fontFamily: 'var(--font-playfair), serif' }}
-          >
-            מרכז העזרה
-          </h1>
-          <p
-            className="text-sm text-muted-500"
-            style={{ fontFamily: 'var(--font-source-serif), serif' }}
-          >
-            כל מה שצריך לדעת כדי לעבוד עם Pacific Travel CRM
-          </p>
+      <div className="max-w-4xl mx-auto px-6 py-10">
+        {/* Title */}
+        <div className="text-center mb-10">
+          <div className="flex justify-center mb-3">
+            <div className="bg-blue-100 p-3 rounded-full">
+              <HelpCircle className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">מרכז העזרה</h1>
+          <p className="text-gray-500">כל מה שצריך לדעת כדי לעבוד עם Pacific Travel CRM</p>
         </div>
 
         {/* Quick nav */}
-        <div className="grid grid-cols-4 gap-px bg-black mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
           {sections.map((s) => (
-            <a
+            <button
               key={s.id}
-              href={`#${s.id}`}
-              className="bg-white p-4 text-center hover:bg-black hover:text-white transition-colors duration-100 flex flex-col items-center gap-2 group"
+              onClick={() => {
+                setActiveSection(activeSection === s.id ? null : s.id);
+                document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className={`p-3 rounded-xl border text-sm font-medium transition-all text-right flex items-center gap-2 ${
+                activeSection === s.id ? colorMap[s.color] : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+              }`}
             >
-              <div className="w-8 h-8 border border-current flex items-center justify-center group-hover:border-white">
-                {s.icon}
-              </div>
-              <span
-                className="text-xs tracking-widest uppercase"
-                style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-              >
-                {s.title}
-              </span>
-            </a>
+              <span className={`p-1.5 rounded-lg ${iconBgMap[s.color]}`}>{s.icon}</span>
+              {s.title}
+            </button>
           ))}
         </div>
 
         {/* Sections */}
-        <div className="space-y-16 mb-16">
+        <div className="space-y-6 mb-10">
           {sections.map((section) => (
-            <section key={section.id} id={section.id}>
-              <div className="border-b-4 border-black pb-3 mb-8">
-                <h2
-                  className="text-3xl font-bold italic flex items-center gap-3"
-                  style={{ fontFamily: 'var(--font-playfair), serif' }}
-                >
+            <Card key={section.id} id={section.id} className={`transition-all scroll-mt-6 ${activeSection && activeSection !== section.id ? 'opacity-50' : ''}`}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <span className={`p-2 rounded-lg ${iconBgMap[section.color]}`}>{section.icon}</span>
                   {section.title}
-                </h2>
-              </div>
-              <div className="space-y-6">
-                {section.steps?.map((step, i) => (
-                  <div key={i} className="flex gap-6">
-                    {/* Step number — square, inverted */}
-                    <div
-                      className="shrink-0 w-8 h-8 bg-black text-white flex items-center justify-center text-xs font-bold"
-                      style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-                    >
-                      {String(i + 1).padStart(2, '0')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {section.steps?.map((step, i) => (
+                    <div key={i} className="flex gap-4">
+                      <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${iconBgMap[section.color]}`}>
+                        {i + 1}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-800 mb-0.5">{step.title}</p>
+                        <p className="text-gray-600 text-sm">{step.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p
-                        className="font-semibold mb-1 text-sm"
-                        style={{ fontFamily: 'var(--font-playfair), serif' }}
-                      >
-                        {step.title}
-                      </p>
-                      <p
-                        className="text-sm text-muted-600"
-                        style={{ fontFamily: 'var(--font-source-serif), serif' }}
-                      >
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
         {/* FAQ */}
-        <section>
-          <div className="border-b-4 border-black pb-3 mb-8">
-            <h2
-              className="text-3xl font-bold italic"
-              style={{ fontFamily: 'var(--font-playfair), serif' }}
-            >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <span className="p-2 rounded-lg bg-gray-100 text-gray-600">
+                <HelpCircle className="w-5 h-5" />
+              </span>
               שאלות נפוצות
-            </h2>
-          </div>
-          <FAQAccordion items={faqs} />
-        </section>
+              <Badge variant="secondary">{faqs.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FAQAccordion items={faqs} />
+          </CardContent>
+        </Card>
 
-        {/* Footer */}
-        <div
-          className="text-center text-xs text-muted-400 mt-16 pt-8 border-t border-muted-300 tracking-widest uppercase"
-          style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-        >
-          Pacific Travel CRM · v1.0 · Feb 2026
-        </div>
+        <p className="text-center text-xs text-gray-400 mt-8">
+          Pacific Travel CRM · גרסה 1.0 · עודכן לאחרונה: פברואר 2026
+        </p>
       </div>
     </div>
   );
