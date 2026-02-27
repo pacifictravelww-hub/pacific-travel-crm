@@ -40,6 +40,17 @@ body {
   color: hsl(var(--foreground));
   font-family: 'Segoe UI', 'Arial', sans-serif;
   direction: rtl;
+  text-align: right;
+}
+
+/* All elements inherit RTL text alignment */
+*, *::before, *::after {
+  text-align: inherit;
+}
+
+/* Inputs/textareas align right */
+input:not([dir="ltr"]), textarea:not([dir="ltr"]), select:not([dir="ltr"]) {
+  text-align: right;
 }
 
 /* RTL overrides */
@@ -72,7 +83,12 @@ body, button, input, textarea, select {
   font-family: 'Rubik', 'Segoe UI', 'Arial', sans-serif;
 }
 
-/* RTL defaults */
-[dir="rtl"] .text-left:not(.ltr) {
+/* RTL: override any explicit text-left in non-ltr contexts */
+[dir="rtl"] *:not(.ltr):not([dir="ltr"]) {
+  text-align: inherit;
+}
+
+/* Placeholder text alignment */
+input::placeholder, textarea::placeholder {
   text-align: right;
 }
