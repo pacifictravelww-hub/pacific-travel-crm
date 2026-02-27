@@ -18,7 +18,7 @@ import {
   LogOut,
   Bell,
 } from 'lucide-react';
-import { signOut } from '@/lib/auth';
+import { signOut, getUserRole, UserRole } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +35,7 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [userEmail, setUserEmail] = useState('');
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
 
@@ -42,6 +43,7 @@ export default function Sidebar() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserEmail(user?.email || user?.user_metadata?.full_name || '');
     });
+    getUserRole().then(setUserRole);
     getUnreadCount().then(setUnreadCount);
     const interval = setInterval(() => getUnreadCount().then(setUnreadCount), 30000);
     return () => clearInterval(interval);
@@ -75,7 +77,13 @@ export default function Sidebar() {
           </div>
           <div>
             <div className="text-sm font-medium">{userEmail}</div>
-            <div className="text-xs text-slate-400">סוכן נסיעות</div>
+            <div className="text-xs text-slate-400 flex items-center gap-1">
+              {userRole === 'developer' && <span className="text-purple-400">👑 Developer</span>}
+              {userRole === 'admin' && <span className="text-yellow-400">⭐ Admin</span>}
+              {userRole === 'agent' && <span>סוכן נסיעות</span>}
+              {userRole === 'customer' && <span>לקוח</span>}
+              {!userRole && <span>סוכן נסיעות</span>}
+            </div>
           </div>
           <div className="mr-auto w-2 h-2 bg-green-400 rounded-full" />
         </div>
