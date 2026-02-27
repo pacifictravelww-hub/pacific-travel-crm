@@ -168,7 +168,9 @@ export default function SettingsPage() {
       setSaveMsg('תמונה הועלתה בהצלחה!');
       setTimeout(() => setSaveMsg(''), 3000);
     } else {
-      setSaveMsg('שגיאה בהעלאת התמונה');
+      console.error('Avatar upload error:', error);
+      setSaveMsg(`שגיאה: ${error.message}`);
+      setTimeout(() => setSaveMsg(''), 5000);
     }
     setUploadingAvatar(false);
   };
