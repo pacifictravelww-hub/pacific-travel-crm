@@ -14,7 +14,6 @@ export default function CompleteProfilePage() {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'agent' | 'customer'>('agent');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,7 +44,7 @@ export default function CompleteProfilePage() {
         email: user.email,
         full_name: fullName,
         phone,
-        role,
+        role: 'customer', // default — admin sets the real role
         status: 'pending',
         updated_at: new Date().toISOString(),
       });
@@ -60,8 +59,8 @@ export default function CompleteProfilePage() {
     await notifyAdmins(
       'new_user_pending',
       'משתמש חדש ממתין לאישור',
-      `${fullName} (${user.email}) נרשם כ${role === 'agent' ? 'סוכן נסיעות' : 'לקוח'} וממתין לאישור`,
-      { userId: user.id, userName: fullName, userEmail: user.email, userRole: role }
+      `${fullName} (${user.email}) נרשם וממתין לאישור`,
+      { userId: user.id, userName: fullName, userEmail: user.email }
     );
 
     router.push('/pending-approval');
@@ -106,33 +105,6 @@ export default function CompleteProfilePage() {
                   className="mt-1 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:border-blue-500"
                   dir="ltr"
                 />
-              </div>
-              <div>
-                <Label className="text-slate-300 text-sm">סוג משתמש</Label>
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRole('agent')}
-                    className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
-                      role === 'agent'
-                        ? 'bg-blue-600 border-blue-500 text-white'
-                        : 'border-slate-600 text-slate-400 hover:border-slate-500 hover:text-white'
-                    }`}
-                  >
-                    סוכן נסיעות
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole('customer')}
-                    className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all ${
-                      role === 'customer'
-                        ? 'bg-blue-600 border-blue-500 text-white'
-                        : 'border-slate-600 text-slate-400 hover:border-slate-500 hover:text-white'
-                    }`}
-                  >
-                    לקוח
-                  </button>
-                </div>
               </div>
 
               {error && (
