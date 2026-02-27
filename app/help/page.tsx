@@ -201,7 +201,10 @@ export default function HelpPage() {
           {sections.map((s) => (
             <button
               key={s.id}
-              onClick={() => setActiveSection(activeSection === s.id ? null : s.id)}
+              onClick={() => {
+                setActiveSection(activeSection === s.id ? null : s.id);
+                document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
               className={`p-3 rounded-xl border text-sm font-medium transition-all text-right flex items-center gap-2 ${
                 activeSection === s.id ? colorMap[s.color] : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
               }`}
@@ -215,7 +218,7 @@ export default function HelpPage() {
         {/* Sections */}
         <div className="space-y-6 mb-10">
           {sections.map((section) => (
-            <Card key={section.id} className={`transition-all ${activeSection && activeSection !== section.id ? 'opacity-50' : ''}`}>
+            <Card key={section.id} id={section.id} className={`transition-all scroll-mt-6 ${activeSection && activeSection !== section.id ? 'opacity-50' : ''}`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <span className={`p-2 rounded-lg ${iconBgMap[section.color]}`}>{section.icon}</span>

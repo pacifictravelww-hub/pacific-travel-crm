@@ -1,13 +1,5 @@
 import { MOCK_LEADS, LEAD_STATUS_LABELS } from '@/lib/data';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import {
-  Users, TrendingUp, DollarSign, Plane,
-  Calendar, Star, Target, ArrowLeft
-} from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
   const totalLeads = MOCK_LEADS.length;
@@ -15,244 +7,182 @@ export default function DashboardPage() {
   const totalRevenue = paidLeads.reduce((sum, l) => sum + (l.total_price || 0), 0);
   const totalCommission = paidLeads.reduce((sum, l) => sum + (l.commission || 0), 0);
   const conversionRate = Math.round((paidLeads.length / totalLeads) * 100);
-  const monthlyTarget = 20000;
-  const targetProgress = Math.round((totalCommission / monthlyTarget) * 100);
 
   const recentLeads = [...MOCK_LEADS]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
+    .slice(0, 8);
 
   const statusCounts = MOCK_LEADS.reduce((acc, lead) => {
     acc[lead.status] = (acc[lead.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const upcomingFlights = MOCK_LEADS.filter(l =>
-    l.status === 'paid' || l.status === 'flying'
-  ).sort((a, b) => new Date(a.departure_date).getTime() - new Date(b.departure_date).getTime());
+  const stats = [
+    { label: 'סה"כ לידים', value: totalLeads.toString(), meta: '+12% החודש', inverted: false },
+    { label: 'הכנסות', value: `₪${totalRevenue.toLocaleString()}`, meta: '+8% החודש', inverted: true },
+    { label: 'עמלות', value: `₪${totalCommission.toLocaleString()}`, meta: 'החודש', inverted: false },
+    { label: 'אחוז המרה', value: `${conversionRate}%`, meta: 'יעד: 30%', inverted: false },
+  ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">לוח בקרה</h1>
-        <p className="text-slate-500 mt-1">ינואר 2024 · Pacific Travel CRM</p>
+    <div className="p-8 max-w-6xl mx-auto">
+      {/* Hero Header */}
+      <div className="mb-10 pb-6 border-b-4 border-black">
+        <h1
+          className="text-5xl font-bold leading-tight"
+          style={{ fontFamily: 'var(--font-frank-ruhl), serif' }}
+        >
+          דשבורד
+        </h1>
+        <p
+          className="text-sm tracking-widest uppercase mt-2 text-muted-500"
+          style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+        >
+          Pacific Travel CRM · ינואר 2026
+        </p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">+12%</Badge>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-black mb-10">
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className={`p-6 group cursor-default transition-all duration-100 ${
+              stat.inverted
+                ? 'bg-black text-white hover:bg-white hover:text-black'
+                : 'bg-white text-black hover:bg-black hover:text-white'
+            }`}
+          >
+            <div
+              className="text-4xl font-bold mb-2"
+              style={{ fontFamily: 'var(--font-playfair), serif' }}
+            >
+              {stat.value}
             </div>
-            <div className="text-2xl font-bold text-slate-900">{totalLeads}</div>
-            <div className="text-sm text-slate-500 mt-1">סה"כ לידים</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">+8%</Badge>
+            <div className="text-sm mb-1" style={{ fontFamily: 'var(--font-frank-ruhl), serif' }}>
+              {stat.label}
             </div>
-            <div className="text-2xl font-bold text-slate-900">₪{totalRevenue.toLocaleString()}</div>
-            <div className="text-sm text-slate-500 mt-1">הכנסות החודש</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Star className="w-5 h-5 text-purple-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">+5%</Badge>
+            <div
+              className="text-xs tracking-widest uppercase opacity-60"
+              style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+            >
+              {stat.meta}
             </div>
-            <div className="text-2xl font-bold text-slate-900">₪{totalCommission.toLocaleString()}</div>
-            <div className="text-sm text-slate-500 mt-1">עמלות החודש</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-orange-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">יעד: 30%</Badge>
-            </div>
-            <div className="text-2xl font-bold text-slate-900">{conversionRate}%</div>
-            <div className="text-sm text-slate-500 mt-1">אחוז המרה</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Commission Target */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-4 h-4 text-blue-600" />
-              יעד עמלות חודשי
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">הושג</span>
-                <span className="font-semibold">₪{totalCommission.toLocaleString()} / ₪{monthlyTarget.toLocaleString()}</span>
-              </div>
-              <Progress value={Math.min(targetProgress, 100)} className="h-3" />
-              <div className="text-center text-sm text-slate-500">{targetProgress}% מהיעד</div>
-            </div>
-
-            <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-2 text-center">
-              <div>
-                <div className="text-lg font-bold text-slate-900">{statusCounts.lead || 0}</div>
-                <div className="text-xs text-slate-500">ליד</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-blue-600">{statusCounts.proposal_sent || 0}</div>
-                <div className="text-xs text-slate-500">הצעות</div>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-green-600">{statusCounts.paid || 0}</div>
-                <div className="text-xs text-slate-500">שולם</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Flights */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Plane className="w-4 h-4 text-blue-600" />
-              טיסות קרובות
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {upcomingFlights.length === 0 ? (
-              <div className="text-center text-slate-400 py-4 text-sm">אין טיסות קרובות</div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingFlights.map(lead => (
-                  <Link key={lead.id} href={`/leads/${lead.id}`}>
-                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-bold text-blue-700">
-                        {lead.name.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-slate-800 truncate">{lead.name}</div>
-                        <div className="text-xs text-slate-500">{lead.destination}</div>
-                      </div>
-                      <div className="text-xs text-slate-500 text-left ltr">
-                        {new Date(lead.departure_date).toLocaleDateString('he-IL')}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pipeline Summary */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-600" />
-              סיכום משפך מכירות
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {(Object.entries(LEAD_STATUS_LABELS) as [string, string][]).map(([status, label]) => {
-                const count = statusCounts[status] || 0;
-                const pct = totalLeads > 0 ? (count / totalLeads) * 100 : 0;
-                const colors: Record<string, string> = {
-                  lead: 'bg-gray-400',
-                  proposal_sent: 'bg-blue-500',
-                  paid: 'bg-green-500',
-                  flying: 'bg-purple-500',
-                  returned: 'bg-orange-500',
-                };
-                return (
-                  <div key={status} className="flex items-center gap-2">
-                    <div className="w-20 text-xs text-slate-600 text-right">{label}</div>
-                    <div className="flex-1 bg-slate-100 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${colors[status]}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="w-6 text-xs text-slate-500 text-center">{count}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Leads */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-base">לידים אחרונים</CardTitle>
-          <Link href="/leads">
-            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 gap-1">
-              כל הלידים
-              <ArrowLeft className="w-3 h-3" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {recentLeads.map(lead => {
-              const statusColors: Record<string, string> = {
-                lead: 'bg-gray-100 text-gray-700',
-                proposal_sent: 'bg-blue-100 text-blue-700',
-                paid: 'bg-green-100 text-green-700',
-                flying: 'bg-purple-100 text-purple-700',
-                returned: 'bg-orange-100 text-orange-700',
-              };
-              return (
-                <Link key={lead.id} href={`/leads/${lead.id}`}>
-                  <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-200">
-                    <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0">
-                      {lead.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-800 text-sm">{lead.name}</span>
-                        {lead.tags.map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs py-0 h-4">
-                            {tag === 'honeymoon' ? '💑' : tag === 'vip' ? '⭐' : tag === 'kosher' ? '✡️' : tag === 'family' ? '👨‍👩‍👧' : tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="text-xs text-slate-500 mt-0.5">{lead.destination} · {lead.adults} מבוגרים {lead.children > 0 ? `· ${lead.children} ילדים` : ''}</div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-sm font-medium text-slate-700">₪{(lead.budget || 0).toLocaleString()}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[lead.status]}`}>
-                        {LEAD_STATUS_LABELS[lead.status]}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
           </div>
-        </CardContent>
-      </Card>
+        ))}
+      </div>
+
+      {/* Pipeline Summary */}
+      <div className="mb-10">
+        <div className="border-b-4 border-black mb-6 pb-2">
+          <h2
+            className="text-xl font-bold"
+            style={{ fontFamily: 'var(--font-playfair), serif' }}
+          >
+            משפך מכירות
+          </h2>
+        </div>
+        <div className="grid grid-cols-5 gap-px bg-black">
+          {(Object.entries(LEAD_STATUS_LABELS) as [string, string][]).map(([status, label]) => {
+            const count = statusCounts[status] || 0;
+            const pct = totalLeads > 0 ? Math.round((count / totalLeads) * 100) : 0;
+            return (
+              <div key={status} className="bg-white p-4 text-center hover:bg-black hover:text-white transition-colors duration-100 group cursor-default">
+                <div
+                  className="text-3xl font-bold mb-1"
+                  style={{ fontFamily: 'var(--font-playfair), serif' }}
+                >
+                  {count}
+                </div>
+                <div className="text-xs mb-2" style={{ fontFamily: 'var(--font-frank-ruhl), serif' }}>
+                  {label}
+                </div>
+                <div
+                  className="text-xs tracking-widest opacity-50"
+                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                >
+                  {pct}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent Leads Table */}
+      <div>
+        <div className="border-b-4 border-black mb-0 pb-2 flex items-center justify-between">
+          <h2
+            className="text-xl font-bold"
+            style={{ fontFamily: 'var(--font-playfair), serif' }}
+          >
+            לידים אחרונים
+          </h2>
+          <Link
+            href="/leads"
+            className="text-xs tracking-widest uppercase border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors duration-100"
+            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+          >
+            כל הלידים ←
+          </Link>
+        </div>
+
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b-2 border-black">
+              {['שם', 'יעד', 'תאריך יציאה', 'תקציב', 'סטטוס'].map((h) => (
+                <th
+                  key={h}
+                  className="text-right py-3 px-4 text-xs tracking-widest uppercase text-muted-600 font-normal"
+                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {recentLeads.map((lead, i) => (
+              <tr
+                key={lead.id}
+                className={`border-b border-muted-200 hover:bg-black hover:text-white transition-colors duration-100 cursor-pointer ${i % 2 === 0 ? 'bg-white' : 'bg-muted-100'}`}
+              >
+                <td className="py-3 px-4">
+                  <Link href={`/leads/${lead.id}`} className="block">
+                    <span
+                      className="font-medium text-sm"
+                      style={{ fontFamily: 'var(--font-frank-ruhl), serif' }}
+                    >
+                      {lead.name}
+                    </span>
+                  </Link>
+                </td>
+                <td className="py-3 px-4 text-sm text-muted-700">{lead.destination}</td>
+                <td
+                  className="py-3 px-4 text-sm ltr"
+                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                >
+                  {new Date(lead.departure_date).toLocaleDateString('he-IL')}
+                </td>
+                <td
+                  className="py-3 px-4 text-sm font-medium ltr"
+                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                >
+                  ₪{lead.budget.toLocaleString()}
+                </td>
+                <td className="py-3 px-4">
+                  <span
+                    className="text-xs tracking-widest uppercase border border-black px-2 py-0.5"
+                    style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                  >
+                    {LEAD_STATUS_LABELS[lead.status]}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
