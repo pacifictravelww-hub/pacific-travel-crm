@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Flexible images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;

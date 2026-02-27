@@ -184,7 +184,7 @@ export default function HelpPage() {
         <span className="text-gray-700 font-medium">עזרה</span>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-10">
         {/* Title */}
         <div className="text-center mb-10">
           <div className="flex justify-center mb-3">

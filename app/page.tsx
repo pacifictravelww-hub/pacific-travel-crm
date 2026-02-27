@@ -54,7 +54,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">לוח בקרה</h1>
@@ -62,7 +62,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
         <Card className="border-0 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
@@ -236,43 +236,73 @@ export default function DashboardPage() {
           </Link>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {recentLeads.map(lead => {
-              const statusColors: Record<string, string> = {
-                lead: 'bg-gray-100 text-gray-700',
-                proposal_sent: 'bg-blue-100 text-blue-700',
-                paid: 'bg-green-100 text-green-700',
-                flying: 'bg-purple-100 text-purple-700',
-                returned: 'bg-orange-100 text-orange-700',
-              };
-              return (
-                <Link key={lead.id} href={`/leads/${lead.id}`}>
-                  <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-200">
-                    <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0">
-                      {lead.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-800 text-sm">{lead.name}</span>
-                        {lead.tags && lead.tags.map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs py-0 h-4">
-                            {tag === 'honeymoon' ? '💑' : tag === 'vip' ? '⭐' : tag === 'kosher' ? '✡️' : tag === 'family' ? '👨‍👩‍👧' : tag}
-                          </Badge>
-                        ))}
+          {(() => {
+            const statusColors: Record<string, string> = {
+              lead: 'bg-gray-100 text-gray-700',
+              proposal_sent: 'bg-blue-100 text-blue-700',
+              paid: 'bg-green-100 text-green-700',
+              flying: 'bg-purple-100 text-purple-700',
+              returned: 'bg-orange-100 text-orange-700',
+            };
+            return (
+              <>
+                {/* Mobile: card list */}
+                <div className="space-y-3 md:hidden">
+                  {recentLeads.map(lead => (
+                    <Link key={lead.id} href={`/leads/${lead.id}`}>
+                      <div className="p-3 rounded-lg border border-slate-200 hover:border-blue-200 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0">
+                            {lead.name.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-slate-800 text-sm">{lead.name}</div>
+                            <div className="text-xs text-slate-500">{lead.destination}</div>
+                          </div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[lead.status]}`}>
+                            {LEAD_STATUS_LABELS[lead.status]}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-500">
+                          <span>{lead.adults} מבוגרים{lead.children > 0 ? ` · ${lead.children} ילדים` : ''}</span>
+                          <span className="font-medium text-slate-700">₪{(lead.budget || 0).toLocaleString()}</span>
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">{lead.destination} · {lead.adults} מבוגרים {lead.children > 0 ? `· ${lead.children} ילדים` : ''}</div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-sm font-medium text-slate-700">₪{(lead.budget || 0).toLocaleString()}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[lead.status]}`}>
-                        {LEAD_STATUS_LABELS[lead.status]}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                    </Link>
+                  ))}
+                </div>
+                {/* Desktop: row list */}
+                <div className="hidden md:block space-y-2">
+                  {recentLeads.map(lead => (
+                    <Link key={lead.id} href={`/leads/${lead.id}`}>
+                      <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer border border-transparent hover:border-slate-200">
+                        <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0">
+                          {lead.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-800 text-sm">{lead.name}</span>
+                            {lead.tags && lead.tags.map(tag => (
+                              <Badge key={tag} variant="outline" className="text-xs py-0 h-4">
+                                {tag === 'honeymoon' ? '💑' : tag === 'vip' ? '⭐' : tag === 'kosher' ? '✡️' : tag === 'family' ? '👨‍👩‍👧' : tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="text-xs text-slate-500 mt-0.5">{lead.destination} · {lead.adults} מבוגרים {lead.children > 0 ? `· ${lead.children} ילדים` : ''}</div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-sm font-medium text-slate-700">₪{(lead.budget || 0).toLocaleString()}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[lead.status]}`}>
+                            {LEAD_STATUS_LABELS[lead.status]}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
     </div>

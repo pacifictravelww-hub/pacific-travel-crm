@@ -5,7 +5,7 @@ import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_STATUS_BG, LeadStatus, Lea
 import { getLeads } from '@/lib/leads';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, MessageCircle, Users, MapPin, Calendar, Phone, Plus, Loader2 } from 'lucide-react';
+import { Facebook, MessageCircle, Users, MapPin, Calendar, Phone, Plus, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 
 const STATUS_ORDER: LeadStatus[] = ['lead', 'proposal_sent', 'paid', 'flying', 'returned'];
@@ -91,6 +91,50 @@ function LeadCard({ lead }: { lead: Lead }) {
   );
 }
 
+function MobileColumn({ status, leads }: { status: LeadStatus; leads: Lead[] }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div className="w-full">
+      {/* Column Header — tappable to collapse */}
+      <button
+        className={`w-full rounded-xl border-2 p-3 mb-3 ${LEAD_STATUS_BG[status]} flex items-center justify-between`}
+        onClick={() => setCollapsed(c => !c)}
+      >
+        <div className="flex items-center gap-2">
+          <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[status]}`}>
+            {LEAD_STATUS_LABELS[status]}
+          </span>
+          <span className="text-sm font-bold text-slate-600">({leads.length})</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {leads.length > 0 && (
+            <span className="text-xs text-slate-500">
+              ₪{leads.reduce((s, l) => s + (l.budget || 0), 0).toLocaleString()}
+            </span>
+          )}
+          {collapsed
+            ? <ChevronDown className="w-4 h-4 text-slate-500" />
+            : <ChevronUp className="w-4 h-4 text-slate-500" />}
+        </div>
+      </button>
+
+      {!collapsed && (
+        <div className="space-y-3">
+          {leads.map(lead => (
+            <LeadCard key={lead.id} lead={lead} />
+          ))}
+          {leads.length === 0 && (
+            <div className="border-2 border-dashed border-slate-200 rounded-xl h-16 flex items-center justify-center text-slate-300 text-sm">
+              אין לידים
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,7 +150,7 @@ export default function LeadsPage() {
     leads.filter(l => l.status === status);
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -116,7 +160,8 @@ export default function LeadsPage() {
         <Link href="/leads/new">
           <Button className="gap-2">
             <Plus className="w-4 h-4" />
-            ליד חדש
+            <span className="hidden sm:inline">ליד חדש</span>
+            <span className="sm:hidden">חדש</span>
           </Button>
         </Link>
       </div>
@@ -126,43 +171,51 @@ export default function LeadsPage() {
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
         </div>
       ) : (
-        /* Kanban Board */
-        <div className="flex gap-4 overflow-x-auto pb-4">
-          {STATUS_ORDER.map(status => {
-            const statusLeads = getLeadsByStatus(status);
-            return (
-              <div key={status} className="flex-shrink-0 w-72">
-                {/* Column Header */}
-                <div className={`rounded-xl border-2 p-3 mb-3 ${LEAD_STATUS_BG[status]}`}>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[status]}`}>
-                      {LEAD_STATUS_LABELS[status]}
-                    </span>
-                    <span className="text-sm font-bold text-slate-600">{statusLeads.length}</span>
+        <>
+          {/* Mobile: vertical stack of collapsible columns */}
+          <div className="md:hidden space-y-4">
+            {STATUS_ORDER.map(status => (
+              <MobileColumn key={status} status={status} leads={getLeadsByStatus(status)} />
+            ))}
+          </div>
+
+          {/* Desktop: horizontal Kanban */}
+          <div className="hidden md:flex gap-4 overflow-x-auto pb-4">
+            {STATUS_ORDER.map(status => {
+              const statusLeads = getLeadsByStatus(status);
+              return (
+                <div key={status} className="flex-shrink-0 w-72">
+                  {/* Column Header */}
+                  <div className={`rounded-xl border-2 p-3 mb-3 ${LEAD_STATUS_BG[status]}`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[status]}`}>
+                        {LEAD_STATUS_LABELS[status]}
+                      </span>
+                      <span className="text-sm font-bold text-slate-600">{statusLeads.length}</span>
+                    </div>
+                    {statusLeads.length > 0 && (
+                      <div className="mt-1 text-xs text-slate-500">
+                        סה&quot;כ ₪{statusLeads.reduce((s, l) => s + (l.budget || 0), 0).toLocaleString()}
+                      </div>
+                    )}
                   </div>
-                  {statusLeads.length > 0 && (
-                    <div className="mt-1 text-xs text-slate-500">
-                      סה&quot;כ ₪{statusLeads.reduce((s, l) => s + (l.budget || 0), 0).toLocaleString()}
-                    </div>
-                  )}
-                </div>
 
-                {/* Cards */}
-                <div className="space-y-3 kanban-column">
-                  {statusLeads.map(lead => (
-                    <LeadCard key={lead.id} lead={lead} />
-                  ))}
-
-                  {statusLeads.length === 0 && (
-                    <div className="border-2 border-dashed border-slate-200 rounded-xl h-24 flex items-center justify-center text-slate-300 text-sm">
-                      אין לידים
-                    </div>
-                  )}
+                  {/* Cards */}
+                  <div className="space-y-3 kanban-column">
+                    {statusLeads.map(lead => (
+                      <LeadCard key={lead.id} lead={lead} />
+                    ))}
+                    {statusLeads.length === 0 && (
+                      <div className="border-2 border-dashed border-slate-200 rounded-xl h-24 flex items-center justify-center text-slate-300 text-sm">
+                        אין לידים
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

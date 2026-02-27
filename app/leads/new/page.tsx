@@ -80,7 +80,7 @@ export default function NewLeadPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Link href="/leads">
@@ -101,9 +101,9 @@ export default function NewLeadPage() {
       )}
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left Column - Main Info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-6">
 
             {/* Personal Info */}
             <Card className="border-0 shadow-sm">
@@ -362,11 +362,12 @@ export default function NewLeadPage() {
         </Card>
 
         {/* Actions */}
-        <div className="flex items-center justify-between mt-6">
+        {/* Mobile: full-width stacked, Desktop: space-between */}
+        <div className="flex flex-col-reverse gap-3 mt-6 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/leads">
-            <Button variant="outline" type="button">ביטול</Button>
+            <Button variant="outline" type="button" className="w-full sm:w-auto">ביטול</Button>
           </Link>
-          <Button type="submit" disabled={isSubmitting} className="px-8">
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto px-8">
             {isSubmitting ? 'שומר...' : 'שמור ליד'}
           </Button>
         </div>
