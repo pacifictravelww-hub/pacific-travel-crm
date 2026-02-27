@@ -26,6 +26,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          DEPLOY_TARGET: github
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
