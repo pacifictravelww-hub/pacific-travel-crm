@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/lib/userContext';
 import { RoleGuard } from '@/components/RoleGuard';
 import { getAllProfiles, updateProfile, deactivateUser, Profile } from '@/lib/profile';
@@ -97,6 +97,8 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Pending approvals
   const [pendingUsers, setPendingUsers] = useState<Profile[]>([]);
@@ -147,8 +149,29 @@ export default function SettingsPage() {
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.full_name || '');
+      setAvatarUrl((profile as any).avatar_url || '');
     }
   }, [profile]);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    const ext = file.name.split('.').pop();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    if (!error) {
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      const url = data.publicUrl + '?t=' + Date.now();
+      setAvatarUrl(url);
+      await updateProfile(user.id, { avatar_url: url } as any);
+      setSaveMsg('תמונה הועלתה בהצלחה!');
+      setTimeout(() => setSaveMsg(''), 3000);
+    } else {
+      setSaveMsg('שגיאה בהעלאת התמונה');
+    }
+    setUploadingAvatar(false);
+  };
 
   const loadUsers = async () => {
     setLoadingUsers(true);
@@ -225,14 +248,20 @@ export default function SettingsPage() {
               {/* Avatar */}
               <div className="flex items-center gap-4">
                 <Avatar className="w-20 h-20">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
                   <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-2xl">
                     {(displayName || user?.email || '?').slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <Camera className="w-4 h-4" />
-                  <span>שנה תמונה</span>
-                </Button>
+                <label className="cursor-pointer">
+                  <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
+                  <Button variant="outline" size="sm" className="flex items-center gap-2 pointer-events-none" asChild>
+                    <span>
+                      <Camera className="w-4 h-4" />
+                      <span>{uploadingAvatar ? 'מעלה...' : 'שנה תמונה'}</span>
+                    </span>
+                  </Button>
+                </label>
               </div>
 
               {/* Fields */}
