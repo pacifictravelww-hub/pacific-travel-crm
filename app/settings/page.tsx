@@ -99,6 +99,8 @@ export default function SettingsPage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Pending approvals
   const [pendingUsers, setPendingUsers] = useState<Profile[]>([]);
@@ -157,7 +159,40 @@ export default function SettingsPage() {
       setDisplayName(profile.full_name || '');
       setAvatarUrl((profile as any).avatar_url || '');
     }
+    // Load agency logo from Supabase Storage public URL
+    const { data } = supabase.storage.from('avatars').getPublicUrl('agency/logo');
+    if (data?.publicUrl) {
+      // Check if it actually exists
+      fetch(data.publicUrl, { method: 'HEAD' }).then(r => {
+        if (r.ok) setLogoUrl(data.publicUrl + '?t=' + Date.now());
+      }).catch(() => {});
+    }
   }, [profile]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    const ext = file.name.split('.').pop();
+    const path = `agency/logo.${ext}`;
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    if (!error) {
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      const url = data.publicUrl + '?t=' + Date.now();
+      setLogoUrl(url);
+      // Broadcast to sidebar
+      localStorage.setItem('agency_logo_url', url);
+      window.dispatchEvent(new StorageEvent('storage', { key: 'agency_logo_url', newValue: url }));
+      setSaveMsg('לוגו הועלה בהצלחה!');
+      setTimeout(() => setSaveMsg(''), 3000);
+    } else {
+      setSaveMsg(`שגיאה: ${error.message}`);
+      setTimeout(() => setSaveMsg(''), 5000);
+    }
+    setUploadingLogo(false);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -535,33 +570,28 @@ export default function SettingsPage() {
                 <Input defaultValue="Pacific Travel" />
               </div>
               <div className="space-y-2">
-                <Label>לוגו</Label>
-                <div className="flex items-center gap-3">
-                  <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center text-white text-2xl overflow-hidden">
-                    {/* Logo preview placeholder */}✈
+                <Label>לוגו סוכנות</Label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-xl border-2 border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50">
+                    {logoUrl
+                      ? <img src={logoUrl} alt="לוגו" className="w-full h-full object-contain p-1" />
+                      : <span className="text-3xl">✈️</span>
+                    }
                   </div>
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        // Store in localStorage for now (per-browser)
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          localStorage.setItem('agency_logo', reader.result as string);
-                          window.dispatchEvent(new Event('agency_logo_updated'));
-                          setSaveMsg('לוגו עודכן!');
-                          setTimeout(() => setSaveMsg(''), 3000);
-                        };
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                    <Camera className="w-4 h-4 text-slate-600" />
-                    <span className="text-slate-700">העלה לוגו</span>
-                  </label>
+                  <div className="space-y-2">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                      />
+                      <Camera className="w-4 h-4 text-slate-600" />
+                      <span className="text-slate-700">{uploadingLogo ? 'מעלה...' : 'העלה לוגו'}</span>
+                    </label>
+                    <p className="text-xs text-slate-400">PNG / JPG / SVG מומלץ — מינימום 200×200px</p>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
