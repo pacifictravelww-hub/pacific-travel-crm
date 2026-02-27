@@ -90,6 +90,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Sidebar />
         </div>
         <main className="flex-1 overflow-y-auto w-full">
+          {/* Agency Banner */}
+          <div className="w-full h-32 md:h-44 overflow-hidden relative shrink-0">
+            <img
+              src="/banner.jpg"
+              alt="Pacific Travel WW"
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50/80" />
+          </div>
           {children}
         </main>
       </div>

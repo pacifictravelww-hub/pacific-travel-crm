@@ -537,11 +537,31 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>לוגו</Label>
                 <div className="flex items-center gap-3">
-                  <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center text-white text-2xl">✈</div>
-                  <Button variant="outline" size="sm">
-                    <Camera className="w-4 h-4 ml-2" />
-                    העלה לוגו
-                  </Button>
+                  <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center text-white text-2xl overflow-hidden">
+                    {/* Logo preview placeholder */}✈
+                  </div>
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        // Store in localStorage for now (per-browser)
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          localStorage.setItem('agency_logo', reader.result as string);
+                          window.dispatchEvent(new Event('agency_logo_updated'));
+                          setSaveMsg('לוגו עודכן!');
+                          setTimeout(() => setSaveMsg(''), 3000);
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <Camera className="w-4 h-4 text-slate-600" />
+                    <span className="text-slate-700">העלה לוגו</span>
+                  </label>
                 </div>
               </div>
               <div className="space-y-2">
