@@ -19,7 +19,7 @@ const SOURCE_ICONS: Record<string, React.ReactNode> = {
 
 function LeadCard({ lead }: { lead: Lead }) {
   return (
-    <Link href={`/leads/${lead.id}`}>
+    <Link href={`/leads/detail?id=${lead.id}`}>
       <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">

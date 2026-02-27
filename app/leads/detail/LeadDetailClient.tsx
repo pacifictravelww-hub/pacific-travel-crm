@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowRight, Loader2, ChevronRight, Phone, Mail, MapPin, Calendar,
@@ -61,9 +61,9 @@ function getExpiryBadge(expiryDate?: string) {
 }
 
 export default function LeadProfilePage() {
-  const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id') || '';
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
