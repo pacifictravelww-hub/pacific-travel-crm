@@ -48,12 +48,15 @@ export default function MobileNav() {
       <div className="md:hidden h-14" />
 
       {/* Backdrop */}
-      <div
+      <button
+        aria-label="סגור תפריט"
         className={cn(
-          'md:hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300',
+          'md:hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 w-full border-0 cursor-default',
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
         onClick={() => setOpen(false)}
+        onTouchEnd={() => setOpen(false)}
+        tabIndex={-1}
       />
 
       {/* Slide-in drawer from right (RTL) */}
