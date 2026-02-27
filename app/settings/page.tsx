@@ -35,7 +35,7 @@ import { useUser } from '@/lib/userContext';
 import { RoleGuard } from '@/components/RoleGuard';
 import { getAllProfiles, updateProfile, deactivateUser, Profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
-import { Camera, CheckCircle, XCircle, UserPlus, Trash2, UserX, Clock } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, UserPlus, Trash2, UserX, Clock, KeyRound } from 'lucide-react';
 import { supabase as supabaseClient } from '@/lib/supabase';
 
 const roleLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
@@ -225,6 +225,19 @@ export default function SettingsPage() {
     loadUsers();
   };
 
+  const [resetMsg, setResetMsg] = useState<{ id: string; msg: string } | null>(null);
+  const handleSendPasswordReset = async (email: string, userId: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      setResetMsg({ id: userId, msg: `שגיאה: ${error.message}` });
+    } else {
+      setResetMsg({ id: userId, msg: '✅ נשלח!' });
+    }
+    setTimeout(() => setResetMsg(null), 4000);
+  };
+
   const openEditUser = (u: Profile) => {
     setEditingUser(u);
     setEditName(u.full_name || '');
@@ -381,22 +394,34 @@ export default function SettingsPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1 flex-wrap">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => openEditUser(u)}
-                                className="text-blue-600 hover:text-blue-800"
+                                className="text-blue-600 hover:text-blue-800 h-8 px-2"
                                 title="ערוך משתמש"
                               >
                                 ✏️
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleSendPasswordReset(u.email, u.id)}
+                                className="text-amber-600 hover:text-amber-800 h-8 px-2"
+                                title="שלח לינק לאיפוס סיסמה"
+                              >
+                                <KeyRound className="w-4 h-4" />
+                              </Button>
+                              {resetMsg?.id === u.id && (
+                                <span className="text-xs text-green-600 mr-1">{resetMsg.msg}</span>
+                              )}
                               {u.is_active && u.id !== user?.id && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeactivate(u.id)}
-                                  className="text-slate-500 hover:text-red-500"
+                                  className="text-slate-500 hover:text-red-500 h-8 px-2"
                                   title="השבת משתמש"
                                 >
                                   <UserX className="w-4 h-4" />
