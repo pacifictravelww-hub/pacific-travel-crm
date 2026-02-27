@@ -20,12 +20,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error || !session) {
         router.replace('/login');
       } else {
         setChecking(false);
       }
+    }).catch(() => {
+      router.replace('/login');
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
