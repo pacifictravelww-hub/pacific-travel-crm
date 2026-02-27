@@ -199,7 +199,7 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-bold text-slate-800 mb-6">הגדרות</h1>
 
       <Tabs defaultValue="profile">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 w-full justify-start">
           <TabsTrigger value="profile">פרופיל</TabsTrigger>
           <TabsTrigger value="users" onClick={loadUsers}>ניהול משתמשים</TabsTrigger>
           {(profile?.role === 'admin' || profile?.role === 'developer') && (

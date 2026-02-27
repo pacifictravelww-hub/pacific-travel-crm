@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowRight, Loader2, ChevronRight, Phone, Mail, MapPin, Calendar,
+  ArrowRight, Loader2, ChevronLeft, Phone, Mail, MapPin, Calendar,
   Users, DollarSign, FileText, MessageCircle, Plus, X, CheckCircle2,
   Clock, AlertCircle, Send, Pencil, Trash2
 } from 'lucide-react';
@@ -190,7 +190,7 @@ export default function LeadProfilePage() {
         </div>
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { setEditForm(lead); setShowEditModal(true); }}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => router.push(`/leads/edit?id=${id}`)}>
             <Pencil className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">ערוך</span>
           </Button>
@@ -293,7 +293,7 @@ export default function LeadProfilePage() {
                   {i < currentStatusIndex && <CheckCircle2 className="w-3 h-3" />}
                   {LEAD_STATUS_LABELS[status]}
                 </div>
-                {i < STATUS_ORDER.length - 1 && <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />}
+                {i < STATUS_ORDER.length - 1 && <ChevronLeft className="w-3 h-3 text-slate-300 shrink-0" />}
               </div>
             ))}
           </div>
