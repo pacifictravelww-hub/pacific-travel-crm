@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { UserProvider } from '@/lib/userContext';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 
@@ -55,7 +56,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   // Authenticated app shell
   return (
-    <>
+    <UserProvider>
       <MobileNav />
       <div className="flex min-h-screen bg-slate-50">
         <div className="hidden md:flex">
@@ -65,6 +66,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-    </>
+    </UserProvider>
   );
 }
