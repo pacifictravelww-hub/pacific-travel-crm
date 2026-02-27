@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { MOCK_LEADS, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_STATUS_BG, LeadStatus, Lead } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_STATUS_BG, LeadStatus, Lead } from '@/lib/data';
+import { getLeads } from '@/lib/leads';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Facebook, MessageCircle, Users, MapPin, Calendar, Phone, Plus } from 'lucide-react';
+import { Facebook, MessageCircle, Users, MapPin, Calendar, Phone, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const STATUS_ORDER: LeadStatus[] = ['lead', 'proposal_sent', 'paid', 'flying', 'returned'];
@@ -17,7 +18,6 @@ const SOURCE_ICONS: Record<string, React.ReactNode> = {
 };
 
 function LeadCard({ lead }: { lead: Lead }) {
-  const totalPax = lead.adults + lead.children + lead.infants;
   return (
     <Link href={`/leads/${lead.id}`}>
       <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group">
@@ -35,22 +35,26 @@ function LeadCard({ lead }: { lead: Lead }) {
               </div>
             </div>
           </div>
-          <div className="text-sm font-bold text-slate-700">₪{lead.budget.toLocaleString()}</div>
+          <div className="text-sm font-bold text-slate-700">₪{(lead.budget || 0).toLocaleString()}</div>
         </div>
 
         {/* Destination */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="text-sm text-slate-600 truncate">{lead.destination}</span>
-        </div>
+        {lead.destination && (
+          <div className="flex items-center gap-1.5 mb-2">
+            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="text-sm text-slate-600 truncate">{lead.destination}</span>
+          </div>
+        )}
 
         {/* Dates */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="text-xs text-slate-500 ltr">
-            {new Date(lead.departure_date).toLocaleDateString('he-IL')} — {new Date(lead.return_date).toLocaleDateString('he-IL')}
-          </span>
-        </div>
+        {lead.departure_date && (
+          <div className="flex items-center gap-1.5 mb-2">
+            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="text-xs text-slate-500 ltr">
+              {new Date(lead.departure_date).toLocaleDateString('he-IL')} — {lead.return_date ? new Date(lead.return_date).toLocaleDateString('he-IL') : ''}
+            </span>
+          </div>
+        )}
 
         {/* PAX */}
         <div className="flex items-center gap-1.5 mb-3">
@@ -61,7 +65,7 @@ function LeadCard({ lead }: { lead: Lead }) {
         </div>
 
         {/* Tags */}
-        {lead.tags.length > 0 && (
+        {lead.tags && lead.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {lead.tags.map(tag => (
               <Badge key={tag} variant="outline" className="text-xs py-0 h-5 text-slate-600">
@@ -88,7 +92,15 @@ function LeadCard({ lead }: { lead: Lead }) {
 }
 
 export default function LeadsPage() {
-  const [leads] = useState(MOCK_LEADS);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getLeads().then(data => {
+      setLeads(data);
+      setLoading(false);
+    });
+  }, []);
 
   const getLeadsByStatus = (status: LeadStatus) =>
     leads.filter(l => l.status === status);
@@ -109,43 +121,49 @@ export default function LeadsPage() {
         </Link>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {STATUS_ORDER.map(status => {
-          const statusLeads = getLeadsByStatus(status);
-          return (
-            <div key={status} className="flex-shrink-0 w-72">
-              {/* Column Header */}
-              <div className={`rounded-xl border-2 p-3 mb-3 ${LEAD_STATUS_BG[status]}`}>
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[status]}`}>
-                    {LEAD_STATUS_LABELS[status]}
-                  </span>
-                  <span className="text-sm font-bold text-slate-600">{statusLeads.length}</span>
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        </div>
+      ) : (
+        /* Kanban Board */
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {STATUS_ORDER.map(status => {
+            const statusLeads = getLeadsByStatus(status);
+            return (
+              <div key={status} className="flex-shrink-0 w-72">
+                {/* Column Header */}
+                <div className={`rounded-xl border-2 p-3 mb-3 ${LEAD_STATUS_BG[status]}`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[status]}`}>
+                      {LEAD_STATUS_LABELS[status]}
+                    </span>
+                    <span className="text-sm font-bold text-slate-600">{statusLeads.length}</span>
+                  </div>
+                  {statusLeads.length > 0 && (
+                    <div className="mt-1 text-xs text-slate-500">
+                      סה&quot;כ ₪{statusLeads.reduce((s, l) => s + (l.budget || 0), 0).toLocaleString()}
+                    </div>
+                  )}
                 </div>
-                {statusLeads.length > 0 && (
-                  <div className="mt-1 text-xs text-slate-500">
-                    סה"כ ₪{statusLeads.reduce((s, l) => s + l.budget, 0).toLocaleString()}
-                  </div>
-                )}
-              </div>
 
-              {/* Cards */}
-              <div className="space-y-3 kanban-column">
-                {statusLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} />
-                ))}
+                {/* Cards */}
+                <div className="space-y-3 kanban-column">
+                  {statusLeads.map(lead => (
+                    <LeadCard key={lead.id} lead={lead} />
+                  ))}
 
-                {statusLeads.length === 0 && (
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl h-24 flex items-center justify-center text-slate-300 text-sm">
-                    אין לידים
-                  </div>
-                )}
+                  {statusLeads.length === 0 && (
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl h-24 flex items-center justify-center text-slate-300 text-sm">
+                      אין לידים
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

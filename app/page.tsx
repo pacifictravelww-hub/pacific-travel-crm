@@ -1,42 +1,64 @@
-import { MOCK_LEADS, LEAD_STATUS_LABELS } from '@/lib/data';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Lead, LEAD_STATUS_LABELS } from '@/lib/data';
+import { getLeads } from '@/lib/leads';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Users, TrendingUp, DollarSign, Plane,
-  Calendar, Star, Target, ArrowLeft
+  Calendar, Star, Target, ArrowLeft, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
-  const totalLeads = MOCK_LEADS.length;
-  const paidLeads = MOCK_LEADS.filter(l => l.status === 'paid' || l.status === 'flying' || l.status === 'returned');
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getLeads().then(data => {
+      setLeads(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const totalLeads = leads.length;
+  const paidLeads = leads.filter(l => l.status === 'paid' || l.status === 'flying' || l.status === 'returned');
   const totalRevenue = paidLeads.reduce((sum, l) => sum + (l.total_price || 0), 0);
   const totalCommission = paidLeads.reduce((sum, l) => sum + (l.commission || 0), 0);
-  const conversionRate = Math.round((paidLeads.length / totalLeads) * 100);
+  const conversionRate = totalLeads > 0 ? Math.round((paidLeads.length / totalLeads) * 100) : 0;
   const monthlyTarget = 20000;
   const targetProgress = Math.round((totalCommission / monthlyTarget) * 100);
 
-  const recentLeads = [...MOCK_LEADS]
+  const recentLeads = [...leads]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 5);
 
-  const statusCounts = MOCK_LEADS.reduce((acc, lead) => {
+  const statusCounts = leads.reduce((acc, lead) => {
     acc[lead.status] = (acc[lead.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const upcomingFlights = MOCK_LEADS.filter(l =>
+  const upcomingFlights = leads.filter(l =>
     l.status === 'paid' || l.status === 'flying'
   ).sort((a, b) => new Date(a.departure_date).getTime() - new Date(b.departure_date).getTime());
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">לוח בקרה</h1>
-        <p className="text-slate-500 mt-1">ינואר 2024 · Pacific Travel CRM</p>
+        <p className="text-slate-500 mt-1">Pacific Travel CRM</p>
       </div>
 
       {/* KPI Cards */}
@@ -50,7 +72,7 @@ export default function DashboardPage() {
               <Badge variant="secondary" className="text-xs">+12%</Badge>
             </div>
             <div className="text-2xl font-bold text-slate-900">{totalLeads}</div>
-            <div className="text-sm text-slate-500 mt-1">סה"כ לידים</div>
+            <div className="text-sm text-slate-500 mt-1">סה&quot;כ לידים</div>
           </CardContent>
         </Card>
 
@@ -232,7 +254,7 @@ export default function DashboardPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-slate-800 text-sm">{lead.name}</span>
-                        {lead.tags.map(tag => (
+                        {lead.tags && lead.tags.map(tag => (
                           <Badge key={tag} variant="outline" className="text-xs py-0 h-4">
                             {tag === 'honeymoon' ? '💑' : tag === 'vip' ? '⭐' : tag === 'kosher' ? '✡️' : tag === 'family' ? '👨‍👩‍👧' : tag}
                           </Badge>

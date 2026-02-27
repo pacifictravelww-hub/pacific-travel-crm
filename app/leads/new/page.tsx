@@ -8,10 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// import { Badge } from '@/components/ui/badge';
 import { ArrowRight, User, Plane, Hotel, DollarSign, Tag, Facebook, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Tag as TagType } from '@/lib/data';
+import { createLead } from '@/lib/leads';
 
 const AVAILABLE_TAGS: { value: TagType; label: string; emoji: string }[] = [
   { value: 'honeymoon', label: 'ירח דבש', emoji: '💑' },
@@ -26,6 +26,11 @@ export default function NewLeadPage() {
   const router = useRouter();
   const [selectedTags, setSelectedTags] = useState<TagType[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hotelLevel, setHotelLevel] = useState('4');
+  const [boardBasis, setBoardBasis] = useState('hb');
+  const [seatPreference, setSeatPreference] = useState('');
+  const [vacationType, setVacationType] = useState('beach');
 
   const toggleTag = (tag: TagType) => {
     setSelectedTags(prev =>
@@ -36,9 +41,42 @@ export default function NewLeadPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 800));
-    router.push('/leads');
+    setError(null);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const leadData = {
+      name: formData.get('name') as string,
+      phone: formData.get('phone') as string,
+      email: formData.get('email') as string || '',
+      source: (formData.get('source') as 'facebook' | 'whatsapp' | 'referral' | 'website') || 'facebook',
+      destination: formData.get('destination') as string || '',
+      departure_date: formData.get('departure_date') as string,
+      return_date: formData.get('return_date') as string,
+      vacation_type: vacationType as 'beach' | 'tours' | 'city' | 'adventure',
+      hotel_level: hotelLevel as '3' | '4' | '5' | 'boutique',
+      board_basis: boardBasis as 'ai' | 'hb' | 'bb' | 'ro' | 'fb',
+      adults: parseInt(formData.get('adults') as string) || 2,
+      children: parseInt(formData.get('children') as string) || 0,
+      infants: parseInt(formData.get('infants') as string) || 0,
+      budget: parseInt(formData.get('budget') as string) || 0,
+      notes: formData.get('notes') as string || '',
+      tags: selectedTags,
+      status: 'lead' as const,
+      agent_id: 'agent1',
+      seat_preference: seatPreference as 'window' | 'aisle' | 'middle' | undefined || undefined,
+      kosher_meal: formData.get('kosher_meal') === 'on',
+    };
+
+    const result = await createLead(leadData);
+
+    if (result) {
+      router.push('/leads');
+    } else {
+      setError('שגיאה בשמירת הליד. נסה שוב.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -55,6 +93,12 @@ export default function NewLeadPage() {
           <p className="text-slate-500 text-sm mt-0.5">הוסף ליד חדש למשפך המכירות</p>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -122,8 +166,8 @@ export default function NewLeadPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="destination" className="text-sm font-medium">יעד *</Label>
-                  <Input id="destination" name="destination" placeholder="לדוג': יוון - סנטוריני" className="mt-1.5" required />
+                  <Label htmlFor="destination" className="text-sm font-medium">יעד</Label>
+                  <Input id="destination" name="destination" placeholder="לדוג': יוון - סנטוריני" className="mt-1.5" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -146,8 +190,15 @@ export default function NewLeadPage() {
                       { value: 'city', label: '🏙️ עיר' },
                       { value: 'adventure', label: '🧗 הרפתקאות' },
                     ].map(type => (
-                      <label key={type.value} className="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors has-[:checked]:bg-blue-50 has-[:checked]:border-blue-400">
-                        <input type="radio" name="vacation_type" value={type.value} className="accent-blue-600" defaultChecked={type.value === 'beach'} />
+                      <label key={type.value} className={`flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors ${vacationType === type.value ? 'bg-blue-50 border-blue-400' : ''}`}>
+                        <input
+                          type="radio"
+                          name="vacation_type"
+                          value={type.value}
+                          checked={vacationType === type.value}
+                          onChange={() => setVacationType(type.value)}
+                          className="accent-blue-600"
+                        />
                         <span className="text-sm">{type.label}</span>
                       </label>
                     ))}
@@ -168,7 +219,7 @@ export default function NewLeadPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium">רמת מלון</Label>
-                    <Select name="hotel_level" defaultValue="4">
+                    <Select value={hotelLevel} onValueChange={setHotelLevel}>
                       <SelectTrigger className="mt-1.5">
                         <SelectValue />
                       </SelectTrigger>
@@ -182,7 +233,7 @@ export default function NewLeadPage() {
                   </div>
                   <div>
                     <Label className="text-sm font-medium">בסיס לינה</Label>
-                    <Select name="board_basis" defaultValue="hb">
+                    <Select value={boardBasis} onValueChange={setBoardBasis}>
                       <SelectTrigger className="mt-1.5">
                         <SelectValue />
                       </SelectTrigger>
@@ -247,7 +298,7 @@ export default function NewLeadPage() {
               <CardContent className="space-y-3">
                 <div>
                   <Label className="text-sm font-medium">מקום ישיבה</Label>
-                  <Select name="seat_preference">
+                  <Select value={seatPreference} onValueChange={setSeatPreference}>
                     <SelectTrigger className="mt-1.5">
                       <SelectValue placeholder="בחר..." />
                     </SelectTrigger>
