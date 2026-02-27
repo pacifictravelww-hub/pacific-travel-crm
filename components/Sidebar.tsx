@@ -36,14 +36,31 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
+  const loadUserData = () => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserEmail(user?.email || user?.user_metadata?.full_name || '');
     });
     getUserRole().then(setUserRole);
+    supabase.from('profiles').select('avatar_url').eq('id', (supabase as any)._currentUser?.id ?? '').maybeSingle().then(() => {});
+    // Load avatar from profiles
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase.from('profiles').select('avatar_url').eq('id', user.id).single().then(({ data }) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+      });
+    });
+  };
+
+  useEffect(() => {
+    loadUserData();
+    // Re-load when tab regains focus (after settings change)
+    const onFocus = () => loadUserData();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
     getUnreadCount().then(setUnreadCount);
     const interval = setInterval(() => getUnreadCount().then(setUnreadCount), 30000);
     return () => clearInterval(interval);
@@ -72,8 +89,11 @@ export default function Sidebar() {
       {/* Agent info */}
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold">
-            {userEmail.slice(0, 2).toUpperCase()}
+          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0">
+            {avatarUrl
+              ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+              : <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-bold">{userEmail.slice(0, 2).toUpperCase()}</div>
+            }
           </div>
           <div>
             <div className="text-sm font-medium">{userEmail}</div>

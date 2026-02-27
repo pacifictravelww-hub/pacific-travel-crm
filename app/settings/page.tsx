@@ -289,14 +289,10 @@ export default function SettingsPage() {
                     {(displayName || user?.email || '?').slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <label className="cursor-pointer">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
-                  <Button variant="outline" size="sm" className="flex items-center gap-2 pointer-events-none" asChild>
-                    <span>
-                      <Camera className="w-4 h-4" />
-                      <span>{uploadingAvatar ? 'מעלה...' : 'שנה תמונה'}</span>
-                    </span>
-                  </Button>
+                  <Camera className="w-4 h-4 text-slate-600" />
+                  <span className="text-slate-700">{uploadingAvatar ? 'מעלה...' : 'שנה תמונה'}</span>
                 </label>
               </div>
 
