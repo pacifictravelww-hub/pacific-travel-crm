@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import {
   LayoutDashboard,
   Users,
@@ -30,6 +32,12 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [userEmail, setUserEmail] = useState('');
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserEmail(user?.email || user?.user_metadata?.full_name || '');
+    });
+  }, []);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -56,10 +64,10 @@ export default function Sidebar() {
       <div className="p-4 border-b border-slate-700">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold">
-            רי
+            {userEmail.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <div className="text-sm font-medium">רינה כהן</div>
+            <div className="text-sm font-medium">{userEmail}</div>
             <div className="text-xs text-slate-400">סוכן נסיעות</div>
           </div>
           <div className="mr-auto w-2 h-2 bg-green-400 rounded-full" />

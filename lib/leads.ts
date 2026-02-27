@@ -3,9 +3,11 @@ import { Lead, LeadStatus, Document, MOCK_LEADS, MOCK_DOCUMENTS } from './data'
 
 export async function getLeads(): Promise<Lead[]> {
   try {
+    const { data: { user } } = await supabase.auth.getUser()
     const { data, error } = await supabase
       .from('leads')
       .select('*')
+      .eq('agent_id', user?.id ?? user?.email ?? 'agent1')
       .order('created_at', { ascending: false })
 
     if (error) {
