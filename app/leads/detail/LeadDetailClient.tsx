@@ -439,7 +439,7 @@ export default function LeadProfilePage() {
                           <p className="text-xs text-slate-500">{DOC_TYPE_LABELS[doc.type] || doc.type}</p>
                         </div>
                       </div>
-                      <div className="text-left shrink-0">
+                      <div className="text-right shrink-0">
                         {doc.expiry_date ? (
                           <>
                             {getExpiryBadge(doc.expiry_date)}

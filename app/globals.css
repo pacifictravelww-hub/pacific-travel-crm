@@ -71,3 +71,8 @@ body {
 body, button, input, textarea, select {
   font-family: 'Rubik', 'Segoe UI', 'Arial', sans-serif;
 }
+
+/* RTL defaults */
+[dir="rtl"] .text-left:not(.ltr) {
+  text-align: right;
+}

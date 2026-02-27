@@ -50,7 +50,7 @@ function LeadCard({ lead }: { lead: Lead }) {
         {lead.departure_date && (
           <div className="flex items-center gap-1.5 mb-2">
             <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <span className="text-xs text-slate-500 ltr">
+            <span className="text-xs text-slate-500">
               {new Date(lead.departure_date).toLocaleDateString('he-IL')} — {lead.return_date ? new Date(lead.return_date).toLocaleDateString('he-IL') : ''}
             </span>
           </div>

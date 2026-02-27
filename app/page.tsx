@@ -175,7 +175,7 @@ export default function DashboardPage() {
                         <div className="text-sm font-medium text-slate-800 truncate">{lead.name}</div>
                         <div className="text-xs text-slate-500">{lead.destination}</div>
                       </div>
-                      <div className="text-xs text-slate-500 text-left ltr">
+                      <div className="text-xs text-slate-500 text-right">
                         {new Date(lead.departure_date).toLocaleDateString('he-IL')}
                       </div>
                     </div>
