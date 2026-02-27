@@ -35,7 +35,8 @@ import { useUser } from '@/lib/userContext';
 import { RoleGuard } from '@/components/RoleGuard';
 import { getAllProfiles, updateProfile, deactivateUser, Profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
-import { Camera, CheckCircle, XCircle, UserPlus, Trash2, UserX } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, UserPlus, Trash2, UserX, Clock } from 'lucide-react';
+import { supabase as supabaseClient } from '@/lib/supabase';
 
 const roleLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   developer: { label: 'מפתח', variant: 'destructive' },
@@ -44,11 +45,94 @@ const roleLabels: Record<string, { label: string; variant: 'default' | 'secondar
   customer: { label: 'לקוח', variant: 'outline' },
 };
 
+function PendingUserRow({
+  user,
+  onApprove,
+  onReject,
+}: {
+  user: Profile;
+  onApprove: (id: string, role: string) => void;
+  onReject: (id: string) => void;
+}) {
+  const [approveRole, setApproveRole] = useState<string>(user.role || 'agent');
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">{user.full_name || '—'}</TableCell>
+      <TableCell>{user.email}</TableCell>
+      <TableCell>
+        <Badge variant={roleLabels[user.role]?.variant || 'outline'}>
+          {roleLabels[user.role]?.label || user.role}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-sm text-slate-500">
+        {new Date(user.created_at).toLocaleDateString('he-IL')}
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          <Select value={approveRole} onValueChange={setApproveRole}>
+            <SelectTrigger className="w-28 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">מנהל</SelectItem>
+              <SelectItem value="agent">סוכן</SelectItem>
+              <SelectItem value="customer">לקוח</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8" onClick={() => onApprove(user.id, approveRole)}>
+            אשר
+          </Button>
+          <Button size="sm" variant="destructive" className="h-8" onClick={() => onReject(user.id)}>
+            דחה
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function SettingsPage() {
   const { user, profile, refreshProfile } = useUser();
   const [displayName, setDisplayName] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
+
+  // Pending approvals
+  const [pendingUsers, setPendingUsers] = useState<Profile[]>([]);
+  const [loadingPending, setLoadingPending] = useState(false);
+  const [approvalMsg, setApprovalMsg] = useState('');
+
+  const loadPendingUsers = async () => {
+    setLoadingPending(true);
+    const { data } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    setPendingUsers((data as Profile[]) || []);
+    setLoadingPending(false);
+  };
+
+  const handleApprove = async (userId: string, role: string) => {
+    await supabaseClient
+      .from('profiles')
+      .update({ status: 'approved', role, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+    setApprovalMsg('המשתמש אושר!');
+    setTimeout(() => setApprovalMsg(''), 3000);
+    loadPendingUsers();
+  };
+
+  const handleReject = async (userId: string) => {
+    await supabaseClient
+      .from('profiles')
+      .update({ status: 'suspended', updated_at: new Date().toISOString() })
+      .eq('id', userId);
+    setApprovalMsg('המשתמש נדחה.');
+    setTimeout(() => setApprovalMsg(''), 3000);
+    loadPendingUsers();
+  };
 
   // User management
   const [users, setUsers] = useState<Profile[]>([]);
@@ -118,6 +202,14 @@ export default function SettingsPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="profile">פרופיל</TabsTrigger>
           <TabsTrigger value="users" onClick={loadUsers}>ניהול משתמשים</TabsTrigger>
+          {(profile?.role === 'admin' || profile?.role === 'developer') && (
+            <TabsTrigger value="approvals" onClick={loadPendingUsers}>
+              אישורים ממתינים
+              {pendingUsers.length > 0 && (
+                <span className="mr-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingUsers.length}</span>
+              )}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="integrations">אינטגרציות</TabsTrigger>
           <TabsTrigger value="general">כללי</TabsTrigger>
         </TabsList>
@@ -256,6 +348,51 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Pending Approvals Tab */}
+        <TabsContent value="approvals">
+          <Card>
+            <CardHeader>
+              <CardTitle>אישורים ממתינים</CardTitle>
+              <CardDescription>משתמשים הממתינים לאישור גישה למערכת</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {approvalMsg && (
+                <div className="mb-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">{approvalMsg}</div>
+              )}
+              {loadingPending ? (
+                <div className="text-center py-8 text-slate-400">טוען...</div>
+              ) : pendingUsers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-400">אין משתמשים ממתינים לאישור</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">שם</TableHead>
+                      <TableHead className="text-right">אימייל</TableHead>
+                      <TableHead className="text-right">תפקיד מבוקש</TableHead>
+                      <TableHead className="text-right">תאריך הרשמה</TableHead>
+                      <TableHead className="text-right">פעולות</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingUsers.map((u) => (
+                      <PendingUserRow
+                        key={u.id}
+                        user={u}
+                        onApprove={handleApprove}
+                        onReject={handleReject}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Integrations Tab */}

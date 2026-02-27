@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getUnreadCount } from '@/lib/notifications';
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +16,7 @@ import {
   FileText,
   HelpCircle,
   LogOut,
+  Bell,
 } from 'lucide-react';
 import { signOut } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
@@ -33,12 +35,17 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [userEmail, setUserEmail] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const router = useRouter();
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUserEmail(user?.email || user?.user_metadata?.full_name || '');
     });
+    getUnreadCount().then(setUnreadCount);
+    const interval = setInterval(() => getUnreadCount().then(setUnreadCount), 30000);
+    return () => clearInterval(interval);
   }, []);
-  const router = useRouter();
 
   const handleLogout = async () => {
     await signOut();
@@ -102,6 +109,25 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Notifications */}
+        <Link
+          href="/notifications"
+          className={cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all',
+            pathname === '/notifications'
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          )}
+        >
+          <Bell className="w-4 h-4 shrink-0" />
+          <span>התראות</span>
+          {unreadCount > 0 && (
+            <span className="mr-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Link>
       </nav>
 
       {/* Settings + Logout */}

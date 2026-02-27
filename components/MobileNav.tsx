@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Users, UserCheck, Settings, Plane,
-  MessageCircle, BarChart3, FileText, Menu, X, HelpCircle, LogOut,
+  MessageCircle, BarChart3, FileText, Menu, X, HelpCircle, LogOut, Bell,
 } from 'lucide-react';
 import { signOut } from '@/lib/auth';
+import { getUnreadCount } from '@/lib/notifications';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -18,13 +19,21 @@ const navItems = [
   { href: '/automations', label: 'אוטומציות', icon: MessageCircle },
   { href: '/reports', label: 'דוחות', icon: BarChart3 },
   { href: '/documents', label: 'מסמכים', icon: FileText },
+  { href: '/notifications', label: 'התראות', icon: Bell },
   { href: '/help', label: 'עזרה', icon: HelpCircle },
 ];
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    getUnreadCount().then(setUnreadCount);
+    const interval = setInterval(() => getUnreadCount().then(setUnreadCount), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     setOpen(false);
@@ -44,14 +53,26 @@ export default function MobileNav() {
           <span className="font-bold text-sm">Pacific Travel</span>
         </div>
 
-        {/* Hamburger */}
-        <button
-          onClick={() => setOpen(true)}
-          className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
-          aria-label="פתח תפריט"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Bell icon */}
+          <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-slate-700 transition-colors">
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Hamburger */}
+          <button
+            onClick={() => setOpen(true)}
+            className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+            aria-label="פתח תפריט"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Spacer so content isn't hidden behind fixed header */}
@@ -135,6 +156,11 @@ export default function MobileNav() {
                     'mr-auto text-xs px-1.5 py-0.5 rounded-full',
                     isActive ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'
                   )}>6</span>
+                )}
+                {item.href === '/notifications' && unreadCount > 0 && (
+                  <span className="mr-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                    {unreadCount}
+                  </span>
                 )}
               </Link>
             );

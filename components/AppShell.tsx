@@ -8,40 +8,67 @@ import { UserProvider } from '@/lib/userContext';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 
+const PUBLIC_PATHS = ['/login', '/register', '/verify-email', '/complete-profile', '/pending-approval'];
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isLoginPage = pathname === '/login';
+  const isPublicPage = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
 
-  const [checking, setChecking] = useState(!isLoginPage);
+  const [checking, setChecking] = useState(!isPublicPage);
 
   useEffect(() => {
-    if (isLoginPage) {
+    if (isPublicPage) {
       setChecking(false);
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error || !session) {
         router.replace('/login');
-      } else {
-        setChecking(false);
+        return;
       }
+
+      // Check profile status
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('status')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile) {
+        // No profile yet (e.g. Google auth first login)
+        router.replace('/complete-profile');
+        return;
+      }
+
+      if (profile.status === 'pending') {
+        router.replace('/pending-approval');
+        return;
+      }
+
+      if (profile.status === 'suspended') {
+        await supabase.auth.signOut();
+        router.replace('/login?error=suspended');
+        return;
+      }
+
+      setChecking(false);
     }).catch(() => {
       router.replace('/login');
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session && pathname !== '/login') {
+      if (!session && !PUBLIC_PATHS.includes(pathname)) {
         router.replace('/login');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [isLoginPage, pathname, router]);
+  }, [isPublicPage, pathname, router]);
 
-  // Login page — no shell
-  if (isLoginPage) {
+  // Public pages — no shell
+  if (isPublicPage) {
     return <>{children}</>;
   }
 
