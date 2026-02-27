@@ -7,7 +7,7 @@ export async function getLeads(): Promise<Lead[]> {
     const { data, error } = await supabase
       .from('leads')
       .select('*')
-      .eq('agent_id', user?.id ?? user?.email ?? 'agent1')
+      .eq('agent_id', user?.id ?? 'agent1')
       .order('created_at', { ascending: false })
 
     if (error) {

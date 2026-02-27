@@ -12,6 +12,7 @@ import { ArrowRight, User, Plane, Hotel, DollarSign, Tag, Facebook, MessageCircl
 import Link from 'next/link';
 import { Tag as TagType } from '@/lib/data';
 import { createLead } from '@/lib/leads';
+import { supabase } from '@/lib/supabase';
 
 const AVAILABLE_TAGS: { value: TagType; label: string; emoji: string }[] = [
   { value: 'honeymoon', label: 'ירח דבש', emoji: '💑' },
@@ -64,7 +65,7 @@ export default function NewLeadPage() {
       notes: formData.get('notes') as string || '',
       tags: selectedTags,
       status: 'lead' as const,
-      agent_id: 'agent1',
+      agent_id: (await supabase.auth.getUser()).data.user?.id ?? 'agent1',
       seat_preference: seatPreference as 'window' | 'aisle' | 'middle' | undefined || undefined,
       kosher_meal: formData.get('kosher_meal') === 'on',
     };
