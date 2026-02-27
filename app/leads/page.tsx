@@ -1,96 +1,86 @@
 'use client';
 
 import { useState } from 'react';
-import { MOCK_LEADS, LEAD_STATUS_LABELS, LeadStatus, Lead } from '@/lib/data';
-import { MapPin, Calendar, Users, Phone, Plus } from 'lucide-react';
+import { MOCK_LEADS, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, LEAD_STATUS_BG, LeadStatus, Lead } from '@/lib/data';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Facebook, MessageCircle, Users, MapPin, Calendar, Phone, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 const STATUS_ORDER: LeadStatus[] = ['lead', 'proposal_sent', 'paid', 'flying', 'returned'];
+
+const SOURCE_ICONS: Record<string, React.ReactNode> = {
+  facebook: <Facebook className="w-3 h-3 text-blue-600" />,
+  whatsapp: <MessageCircle className="w-3 h-3 text-green-600" />,
+  referral: <Users className="w-3 h-3 text-purple-600" />,
+  website: <MapPin className="w-3 h-3 text-orange-600" />,
+};
 
 function LeadCard({ lead }: { lead: Lead }) {
   const totalPax = lead.adults + lead.children + lead.infants;
   return (
     <Link href={`/leads/${lead.id}`}>
-      <div className="bg-white border border-black p-4 hover:bg-black hover:text-white transition-colors duration-100 cursor-pointer group">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group">
         {/* Header */}
-        <div className="flex items-start justify-between mb-3 border-b border-current pb-2">
-          <div
-            className="font-medium text-sm"
-            style={{ fontFamily: 'var(--font-frank-ruhl), serif' }}
-          >
-            {lead.name}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0">
+              {lead.name.charAt(0)}
+            </div>
+            <div>
+              <div className="font-semibold text-sm text-slate-800 group-hover:text-blue-700 transition-colors">{lead.name}</div>
+              <div className="flex items-center gap-1 mt-0.5">
+                {SOURCE_ICONS[lead.source]}
+                <span className="text-xs text-slate-400">{lead.source === 'facebook' ? 'פייסבוק' : lead.source === 'whatsapp' ? 'ווטסאפ' : lead.source}</span>
+              </div>
+            </div>
           </div>
-          <div
-            className="text-xs font-medium ltr"
-            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
-            ₪{lead.budget.toLocaleString()}
-          </div>
-        </div>
-
-        {/* Source badge */}
-        <div className="mb-3">
-          <span
-            className="text-xs tracking-widest uppercase border border-current px-1.5 py-0.5"
-            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
-            {lead.source === 'facebook' ? 'FB' :
-             lead.source === 'whatsapp' ? 'WA' :
-             lead.source === 'referral' ? 'REF' : 'WEB'}
-          </span>
+          <div className="text-sm font-bold text-slate-700">₪{lead.budget.toLocaleString()}</div>
         </div>
 
         {/* Destination */}
-        <div className="flex items-center gap-1.5 mb-2 text-xs opacity-70">
-          <MapPin className="w-3 h-3 shrink-0" />
-          <span>{lead.destination}</span>
+        <div className="flex items-center gap-1.5 mb-2">
+          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="text-sm text-slate-600 truncate">{lead.destination}</span>
         </div>
 
         {/* Dates */}
-        <div
-          className="flex items-center gap-1.5 mb-2 text-xs opacity-70 ltr"
-          style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-        >
-          <Calendar className="w-3 h-3 shrink-0" />
-          <span>
+        <div className="flex items-center gap-1.5 mb-2">
+          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="text-xs text-slate-500 ltr">
             {new Date(lead.departure_date).toLocaleDateString('he-IL')} — {new Date(lead.return_date).toLocaleDateString('he-IL')}
           </span>
         </div>
 
         {/* PAX */}
-        <div className="flex items-center gap-1.5 mb-3 text-xs opacity-70">
-          <Users className="w-3 h-3 shrink-0" />
-          <span>{totalPax} נוסעים</span>
+        <div className="flex items-center gap-1.5 mb-3">
+          <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="text-xs text-slate-500">
+            {lead.adults} מבוגרים{lead.children > 0 ? ` · ${lead.children} ילדים` : ''}{lead.infants > 0 ? ` · ${lead.infants} תינוקות` : ''}
+          </span>
         </div>
 
         {/* Tags */}
         {lead.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {lead.tags.map(tag => (
-              <span
-                key={tag}
-                className="text-xs border border-current px-1.5 py-0.5 tracking-wider uppercase"
-                style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-              >
-                {tag === 'honeymoon' ? 'MOON' :
-                 tag === 'vip' ? 'VIP' :
-                 tag === 'kosher' ? 'KSH' :
-                 tag === 'family' ? 'FAM' :
-                 tag === 'solo' ? 'SOLO' : tag.toUpperCase()}
-              </span>
+              <Badge key={tag} variant="outline" className="text-xs py-0 h-5 text-slate-600">
+                {tag === 'honeymoon' ? '💑 ירח דבש' :
+                 tag === 'vip' ? '⭐ VIP' :
+                 tag === 'kosher' ? '✡️ כשר' :
+                 tag === 'family' ? '👨‍👩‍👧 משפחה' :
+                 tag === 'solo' ? '🧳 יחיד' : tag}
+              </Badge>
             ))}
           </div>
         )}
 
         {/* Contact */}
-        <div className="flex items-center gap-1 text-xs opacity-60 pt-2 border-t border-current">
-          <Phone className="w-3 h-3" />
-          <span
-            className="ltr"
-            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
+        <div className="flex items-center gap-3 pt-2 border-t border-slate-100">
+          <a href={`tel:${lead.phone}`} className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 transition-colors" onClick={e => e.stopPropagation()}>
+            <Phone className="w-3 h-3" />
             {lead.phone}
-          </span>
+          </a>
         </div>
       </div>
     </Link>
@@ -104,79 +94,51 @@ export default function LeadsPage() {
     leads.filter(l => l.status === status);
 
   return (
-    <div className="p-8">
+    <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 pb-4 border-b-4 border-black">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1
-            className="text-4xl font-bold"
-            style={{ fontFamily: 'var(--font-frank-ruhl), serif' }}
-          >
-            לידים
-          </h1>
-          <p
-            className="text-xs tracking-widest uppercase text-muted-500 mt-1"
-            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
-            Pipeline · {leads.length} records
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900">לידים</h1>
+          <p className="text-slate-500 mt-1 text-sm">ניהול משפך מכירות</p>
         </div>
         <Link href="/leads/new">
-          <button
-            className="flex items-center gap-2 bg-black text-white px-6 py-3 text-xs tracking-widest uppercase hover:bg-white hover:text-black border-2 border-black transition-colors duration-100"
-            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
+          <Button className="gap-2">
             <Plus className="w-4 h-4" />
             ליד חדש
-          </button>
+          </Button>
         </Link>
       </div>
 
       {/* Kanban Board */}
-      <div className="flex gap-px bg-black overflow-x-auto pb-4">
+      <div className="flex gap-4 overflow-x-auto pb-4">
         {STATUS_ORDER.map(status => {
           const statusLeads = getLeadsByStatus(status);
-          const total = statusLeads.reduce((s, l) => s + l.budget, 0);
           return (
-            <div key={status} className="flex-shrink-0 w-64 bg-white">
+            <div key={status} className="flex-shrink-0 w-72">
               {/* Column Header */}
-              <div className="bg-black text-white p-4 border-b-4 border-white">
-                <div
-                  className="text-xs tracking-widest uppercase font-medium"
-                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-                >
-                  {LEAD_STATUS_LABELS[status]}
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span
-                    className="text-2xl font-bold"
-                    style={{ fontFamily: 'var(--font-playfair), serif' }}
-                  >
-                    {statusLeads.length}
+              <div className={`rounded-xl border-2 p-3 mb-3 ${LEAD_STATUS_BG[status]}`}>
+                <div className="flex items-center justify-between">
+                  <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${LEAD_STATUS_COLORS[status]}`}>
+                    {LEAD_STATUS_LABELS[status]}
                   </span>
-                  {statusLeads.length > 0 && (
-                    <span
-                      className="text-xs opacity-60 ltr"
-                      style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-                    >
-                      ₪{total.toLocaleString()}
-                    </span>
-                  )}
+                  <span className="text-sm font-bold text-slate-600">{statusLeads.length}</span>
                 </div>
+                {statusLeads.length > 0 && (
+                  <div className="mt-1 text-xs text-slate-500">
+                    סה"כ ₪{statusLeads.reduce((s, l) => s + l.budget, 0).toLocaleString()}
+                  </div>
+                )}
               </div>
 
               {/* Cards */}
-              <div className="space-y-px bg-muted-200 kanban-column p-px">
+              <div className="space-y-3 kanban-column">
                 {statusLeads.map(lead => (
                   <LeadCard key={lead.id} lead={lead} />
                 ))}
 
                 {statusLeads.length === 0 && (
-                  <div
-                    className="bg-white border-2 border-dashed border-muted-300 h-24 flex items-center justify-center text-muted-400 text-xs tracking-widest uppercase"
-                    style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-                  >
-                    EMPTY
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl h-24 flex items-center justify-center text-slate-300 text-sm">
+                    אין לידים
                   </div>
                 )}
               </div>

@@ -3,37 +3,37 @@
 @tailwind utilities;
 
 :root {
-  --black: #000000;
-  --white: #ffffff;
-  --muted-100: #f5f5f5;
-  --muted-200: #e5e5e5;
-  --muted-300: #d4d4d4;
-  --muted-400: #a3a3a3;
-  --muted-500: #737373;
-  --muted-600: #525252;
-  --muted-700: #404040;
-  --muted-800: #262626;
-  --muted-900: #171717;
-
-  --font-playfair: var(--font-playfair);
-  --font-source-serif: var(--font-source-serif);
-  --font-frank-ruhl: var(--font-frank-ruhl);
-  --font-jetbrains-mono: var(--font-jetbrains-mono);
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
 }
 
-/* Reset border-radius everywhere */
-*, *::before, *::after {
-  border-radius: 0 !important;
-  box-shadow: none !important;
+* {
+  border-color: hsl(var(--border));
 }
 
 body {
-  background-color: #ffffff;
-  color: #000000;
-  font-family: var(--font-source-serif), 'Times New Roman', serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Segoe UI', 'Arial', sans-serif;
   direction: rtl;
-  /* Subtle noise texture */
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
 /* RTL overrides */
@@ -41,16 +41,17 @@ body {
   direction: ltr;
 }
 
-/* Scrollbar styling - monochrome */
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #000000;
+  background: #94a3b8;
+  border-radius: 3px;
 }
 
 /* Kanban column */
@@ -58,30 +59,9 @@ body {
   min-height: 500px;
 }
 
-/* Heavy HR */
-hr.heavy {
-  border: none;
-  border-top: 4px solid #000000;
-}
+/* Hebrew font support */
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
 
-/* Hover inversion transition */
-.hover-invert {
-  transition: background-color 100ms, color 100ms, border-color 100ms;
-}
-.hover-invert:hover {
-  background-color: #000000;
-  color: #ffffff;
-}
-
-/* Font utilities */
-.font-playfair {
-  font-family: var(--font-playfair), Georgia, serif;
-}
-
-.font-frank-ruhl {
-  font-family: var(--font-frank-ruhl), 'Times New Roman', serif;
-}
-
-.font-mono-jet {
-  font-family: var(--font-jetbrains-mono), monospace;
+body, button, input, textarea, select {
+  font-family: 'Rubik', 'Segoe UI', 'Arial', sans-serif;
 }
