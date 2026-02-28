@@ -340,16 +340,19 @@ export default function SettingsPage() {
     <div className="p-6 max-w-5xl mx-auto" dir="rtl">
       <h1 className="text-2xl font-bold text-slate-800 mb-6">הגדרות</h1>
 
-      <Tabs defaultValue="profile" dir="rtl">
+      <Tabs defaultValue="profile" dir="rtl" onValueChange={(val) => {
+          if (val === 'users') loadUsers();
+          if (val === 'approvals') loadPendingUsers();
+        }}>
         <TabsList className="mb-6 w-full justify-start">
           <TabsTrigger value="profile">פרופיל</TabsTrigger>
           <TabsTrigger value="general">כללי</TabsTrigger>
           <TabsTrigger value="integrations">אינטגרציות</TabsTrigger>
           {(profile?.role === 'admin' || profile?.role === 'developer') && (
-            <TabsTrigger value="users" onClick={loadUsers}>ניהול משתמשים</TabsTrigger>
+            <TabsTrigger value="users">ניהול משתמשים</TabsTrigger>
           )}
           {(profile?.role === 'admin' || profile?.role === 'developer') && (
-            <TabsTrigger value="approvals" onClick={loadPendingUsers}>
+            <TabsTrigger value="approvals">
               אישורים ממתינים
               {pendingUsers.length > 0 && (
                 <span className="mr-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingUsers.length}</span>
@@ -455,15 +458,30 @@ export default function SettingsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {u.is_active ? (
-                              <span className="flex items-center gap-1 text-green-600 text-sm">
-                                <CheckCircle className="w-4 h-4" /> פעיל
-                              </span>
-                            ) : (
-                              <span className="flex items-center gap-1 text-slate-400 text-sm">
-                                <XCircle className="w-4 h-4" /> לא פעיל
-                              </span>
-                            )}
+                            <div className="flex flex-col gap-1">
+                              {/* Approval status */}
+                              {(u as Profile & { status?: string }).status === 'approved' ? (
+                                <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
+                                  <CheckCircle className="w-3.5 h-3.5" /> מאושר
+                                </span>
+                              ) : (u as Profile & { status?: string }).status === 'pending' ? (
+                                <span className="flex items-center gap-1 text-amber-500 text-xs font-medium">
+                                  <Clock className="w-3.5 h-3.5" /> ממתין לאישור
+                                </span>
+                              ) : (u as Profile & { status?: string }).status === 'suspended' ? (
+                                <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
+                                  <XCircle className="w-3.5 h-3.5" /> מושעה
+                                </span>
+                              ) : (
+                                <span className="text-xs text-slate-400">—</span>
+                              )}
+                              {/* Active/Inactive */}
+                              {!u.is_active && (
+                                <span className="flex items-center gap-1 text-slate-400 text-xs">
+                                  <XCircle className="w-3 h-3" /> לא פעיל
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1 flex-wrap">
