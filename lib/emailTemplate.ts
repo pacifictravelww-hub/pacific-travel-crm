@@ -1,4 +1,4 @@
-const BANNER_URL = 'https://pacific-travel.vercel.app/banner.jpg';
+const BANNER_URL = 'https://pacific-travel.vercel.app/banner-app.jpg';
 const LOGO_ICON = '✈️';
 const BRAND_NAME = 'Pacific Travel CRM';
 const BRAND_COLOR = '#2563eb';
