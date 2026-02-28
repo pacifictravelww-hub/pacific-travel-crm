@@ -413,7 +413,8 @@ function CustomerCard({ customer }: { customer: Customer }) {
 }
 
 // Missing import
-import { Plus } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
+import { signOut } from '@/lib/auth';
 
 export default function CustomersPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -454,9 +455,20 @@ export default function CustomersPage() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(160deg, #0a0f1e 0%, #0f1a38 50%, #1a0a2e 100%)' }}>
       <div className="p-4 md:p-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white tracking-tight">לקוחות</h1>
-          <p className="text-slate-400 mt-1 text-sm">כל הלקוחות, הנסיעות והמסמכים שלהם</p>
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">לקוחות</h1>
+            <p className="text-slate-400 mt-1 text-sm">כל הלקוחות, הנסיעות והמסמכים שלהם</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-white/15 text-slate-300 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-300 transition-all mt-1"
+            onClick={() => signOut()}
+          >
+            <LogOut className="w-4 h-4" />
+            התנתק
+          </Button>
         </div>
 
         {/* KPI Row */}
