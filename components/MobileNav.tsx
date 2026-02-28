@@ -118,7 +118,7 @@ export default function MobileNav() {
         </div>
       </header>
 
-      <div className="md:hidden h-14" />
+      {/* Spacer moved to AppShell to sit above banner */}
 
       {/* Backdrop */}
       <button

@@ -90,6 +90,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Sidebar />
         </div>
         <main className="flex-1 overflow-y-auto w-full">
+          {/* Mobile nav spacer — keeps banner below the fixed header on mobile */}
+          <div className="md:hidden h-14 shrink-0" />
           {/* Agency Banner */}
           <div className="w-full overflow-hidden relative shrink-0" style={{ height: '150px' }}>
             <img
