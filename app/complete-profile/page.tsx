@@ -195,7 +195,7 @@ export default function CompleteProfilePage() {
                 onMouseEnter={e => !loading && (e.currentTarget.style.transform = 'translateY(-1px)')}
                 onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {loading ? 'שומר...' : 'שמור והמשך →'}
+                {loading ? 'שומר...' : 'שמור והמשך'}
               </button>
             </form>
           </div>

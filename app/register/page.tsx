@@ -287,7 +287,7 @@ export default function RegisterPage() {
                 onMouseEnter={e => !loading && (e.currentTarget.style.transform = 'translateY(-1px)')}
                 onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {loading ? 'יוצר חשבון...' : 'הירשם →'}
+                {loading ? 'יוצר חשבון...' : 'הירשם'}
               </button>
             </form>
 

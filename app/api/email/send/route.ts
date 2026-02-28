@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import {
+  emailLayout, emailHeading, emailSubheading,
+  emailInfoCard, emailButton, emailStepList
+} from '@/lib/emailTemplate';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// TODO: Replace with verified domain email once pacifictravel.co.il is verified in Resend
+// TODO: Replace with verified domain once pacifictravel.co.il is verified in resend.com/domains
 const FROM = 'Pacific Travel CRM <onboarding@resend.dev>';
 
 export async function POST(req: NextRequest) {
@@ -14,74 +18,70 @@ export async function POST(req: NextRequest) {
     let subject = '';
     let html = '';
 
+    // ── New user pending (to admins) ──────────────────────────────────────
     if (type === 'new_user_pending') {
-      // Email to admin(s): new user waiting for approval
-      subject = `משתמש חדש ממתין לאישור — ${data.userName}`;
-      html = `
-        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 32px; border-radius: 16px;">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <div style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); border-radius: 12px; padding: 12px 20px;">
-              <span style="color: white; font-size: 20px; font-weight: bold;">✈️ Pacific Travel CRM</span>
-            </div>
-          </div>
-          <h2 style="color: #f8fafc; font-size: 22px; margin-bottom: 8px;">משתמש חדש ממתין לאישור</h2>
-          <p style="color: #94a3b8; margin-bottom: 24px;">הצטרף משתמש חדש וממתין לאישורך:</p>
-          <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-            <p style="margin: 0 0 8px;"><strong style="color: #93c5fd;">שם:</strong> <span style="color: #e2e8f0;">${data.userName}</span></p>
-            <p style="margin: 0 0 8px;"><strong style="color: #93c5fd;">אימייל:</strong> <span style="color: #e2e8f0;">${data.userEmail}</span></p>
-            ${data.userPhone ? `<p style="margin: 0;"><strong style="color: #93c5fd;">טלפון:</strong> <span style="color: #e2e8f0;">${data.userPhone}</span></p>` : ''}
-          </div>
-          <div style="text-align: center;">
-            <a href="${data.approveUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: bold; font-size: 15px;">
-              אשר משתמש ←
-            </a>
-          </div>
-          <p style="color: #475569; font-size: 12px; text-align: center; margin-top: 32px;">Pacific Travel WW · CRM System</p>
-        </div>
-      `;
+      subject = `🔔 משתמש חדש ממתין לאישור — ${data.userName}`;
+
+      const rows = [
+        { label: '👤 שם', value: data.userName },
+        { label: '📧 אימייל', value: data.userEmail },
+        ...(data.userPhone ? [{ label: '📱 טלפון', value: data.userPhone }] : []),
+      ];
+
+      html = emailLayout(
+        emailHeading('משתמש חדש ממתין לאישור') +
+        emailSubheading('הצטרף משתמש חדש למערכת וממתין לאישורך.') +
+        emailInfoCard(rows) +
+        emailButton('אשר משתמש', data.approveUrl) +
+        `<p style="color:#64748b;font-size:13px;text-align:center;margin-top:12px;">
+          לחץ על הכפתור כדי לנהל משתמשים
+        </p>`,
+        `${data.userName} ממתין לאישור`
+      );
+
+    // ── User approved (to user) ───────────────────────────────────────────
     } else if (type === 'user_approved') {
-      // Email to user: you've been approved
-      subject = `🎉 הגישה שלך אושרה — Pacific Travel CRM`;
-      html = `
-        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 32px; border-radius: 16px;">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <div style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); border-radius: 12px; padding: 12px 20px;">
-              <span style="color: white; font-size: 20px; font-weight: bold;">✈️ Pacific Travel CRM</span>
-            </div>
-          </div>
-          <div style="text-align: center; margin-bottom: 24px;">
-            <div style="display: inline-block; width: 72px; height: 72px; background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(16,185,129,0.1)); border: 2px solid rgba(34,197,94,0.4); border-radius: 50%; line-height: 72px; font-size: 32px;">✅</div>
-          </div>
-          <h2 style="color: #f8fafc; font-size: 24px; text-align: center; margin-bottom: 8px;">ברוך הבא, ${data.userName}! 🎉</h2>
-          <p style="color: #94a3b8; text-align: center; margin-bottom: 32px;">הגישה שלך למערכת אושרה. אתה יכול להתחבר עכשיו.</p>
-          <div style="text-align: center;">
-            <a href="${data.loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: bold; font-size: 15px;">
-              כניסה למערכת ←
-            </a>
-          </div>
-          <p style="color: #475569; font-size: 12px; text-align: center; margin-top: 32px;">Pacific Travel WW · CRM System</p>
-        </div>
-      `;
-    } else if (type === 'welcome_verify') {
-      // Email confirmation (fallback / custom)
-      subject = `אמת את כתובת האימייל שלך — Pacific Travel`;
-      html = `
-        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #e2e8f0; padding: 32px; border-radius: 16px;">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <div style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); border-radius: 12px; padding: 12px 20px;">
-              <span style="color: white; font-size: 20px; font-weight: bold;">✈️ Pacific Travel CRM</span>
-            </div>
-          </div>
-          <h2 style="color: #f8fafc; font-size: 22px; text-align: center; margin-bottom: 8px;">אמת את האימייל שלך</h2>
-          <p style="color: #94a3b8; text-align: center; margin-bottom: 32px;">לחץ על הכפתור כדי לאשר את כתובת האימייל שלך ולהמשיך בהרשמה.</p>
-          <div style="text-align: center;">
-            <a href="${data.confirmUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: bold; font-size: 15px;">
-              אמת אימייל ←
-            </a>
-          </div>
-          <p style="color: #475569; font-size: 12px; text-align: center; margin-top: 32px;">Pacific Travel WW · CRM System</p>
-        </div>
-      `;
+      subject = `🎉 הגישה שלך אושרה — ברוך הבא ל-Pacific Travel!`;
+
+      html = emailLayout(
+        `<div style="text-align:center;margin-bottom:28px;">
+          <div style="font-size:56px;margin-bottom:8px;">🎉</div>
+          ${emailHeading(`ברוך הבא, ${data.userName}!`)}
+          ${emailSubheading('הגישה שלך למערכת אושרה. אתה מוכן להתחבר ולהתחיל לעבוד.')}
+        </div>` +
+        emailStepList([
+          { text: 'החשבון נוצר בהצלחה', done: true },
+          { text: 'אימות אימייל', done: true },
+          { text: 'אישור מנהל — הושלם!', done: true },
+          { text: 'גישה מלאה למערכת', done: true },
+        ]) +
+        emailButton('כניסה למערכת', data.loginUrl),
+        'הגישה שלך אושרה!'
+      );
+
+    // ── Email verification ─────────────────────────────────────────────────
+    } else if (type === 'verify_email') {
+      subject = `אמת את האימייל שלך — Pacific Travel`;
+
+      html = emailLayout(
+        `<div style="text-align:center;margin-bottom:28px;">
+          <div style="font-size:48px;margin-bottom:12px;">📧</div>
+          ${emailHeading('אמת את כתובת האימייל')}
+          ${emailSubheading('לחץ על הכפתור כדי לאשר את כתובת האימייל שלך ולהמשיך בתהליך ההרשמה.')}
+        </div>` +
+        emailStepList([
+          { text: 'יצירת חשבון', done: true },
+          { text: 'אימות אימייל', done: false, active: true },
+          { text: 'השלמת פרטים', done: false },
+          { text: 'אישור מנהל', done: false },
+        ]) +
+        emailButton('אמת את האימייל שלי', data.confirmUrl) +
+        `<p style="color:#64748b;font-size:12px;text-align:center;margin-top:16px;">
+          הלינק תקף ל-24 שעות. אם לא ביקשת להירשם, אפשר להתעלם מהמייל הזה.
+        </p>`,
+        'אמת את האימייל שלך'
+      );
+
     } else {
       return NextResponse.json({ error: 'Unknown email type' }, { status: 400 });
     }
