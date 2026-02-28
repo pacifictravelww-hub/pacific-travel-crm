@@ -76,3 +76,7 @@ export async function notifyAdmins(
     )
   );
 }
+
+export async function deleteNotification(id: string): Promise<void> {
+  await supabase.from('notifications').delete().eq('id', id);
+}
