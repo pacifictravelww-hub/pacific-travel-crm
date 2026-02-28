@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   ArrowRight, Loader2, ChevronLeft, Phone, Mail, MapPin, Calendar,
   Users, DollarSign, FileText, MessageCircle, Plus, X, CheckCircle2,
-  Clock, AlertCircle, Send, Pencil, Trash2
+  Clock, AlertCircle, Send, Pencil, Trash2, ChevronRight, RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,45 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   other: 'אחר',
 };
 
+// Fields required / recommended for each stage transition
+type FieldCheck = { field: keyof Lead; label: string; required: boolean };
+const STAGE_REQUIREMENTS: Record<string, FieldCheck[]> = {
+  lead_to_proposal_sent: [
+    { field: 'destination', label: 'יעד', required: true },
+    { field: 'departure_date', label: 'תאריך יציאה', required: true },
+    { field: 'return_date', label: 'תאריך חזרה', required: true },
+    { field: 'total_price', label: 'מחיר כולל', required: true },
+    { field: 'commission', label: 'עמלה', required: true },
+    { field: 'adults', label: 'מספר נוסעים', required: false },
+  ],
+  proposal_sent_to_paid: [
+    { field: 'total_price', label: 'מחיר כולל', required: true },
+    { field: 'commission', label: 'עמלה', required: true },
+    { field: 'deposit_amount', label: 'סכום מקדמה', required: false },
+  ],
+  paid_to_flying: [
+    { field: 'departure_date', label: 'תאריך יציאה', required: true },
+    { field: 'destination', label: 'יעד', required: true },
+  ],
+  flying_to_returned: [
+    { field: 'return_date', label: 'תאריך חזרה', required: false },
+  ],
+};
+
+// Extra fields to fill when advancing to a stage (modal input fields)
+type StageInput = { field: keyof Lead; label: string; type: string; placeholder?: string };
+const STAGE_INPUTS: Record<string, StageInput[]> = {
+  lead_to_proposal_sent: [
+    { field: 'total_price', label: 'מחיר כולל (₪)', type: 'number', placeholder: '0' },
+    { field: 'commission', label: 'עמלה (₪)', type: 'number', placeholder: '0' },
+  ],
+  proposal_sent_to_paid: [
+    { field: 'deposit_amount', label: 'סכום מקדמה (₪)', type: 'number', placeholder: '0' },
+  ],
+  paid_to_flying: [],
+  flying_to_returned: [],
+};
+
 function getExpiryColor(expiryDate?: string): string {
   if (!expiryDate) return 'text-slate-500';
   const days = Math.floor((new Date(expiryDate).getTime() - Date.now()) / 86400000);
@@ -75,6 +114,13 @@ export default function LeadProfilePage() {
   const [editForm, setEditForm] = useState<Partial<Lead>>({});
   const [docForm, setDocForm] = useState({ type: 'passport', name: '', expiry_date: '' });
 
+  // Stage advancement modal state
+  const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+  const [advanceDirection, setAdvanceDirection] = useState<'forward' | 'back'>('forward');
+  const [stageInputs, setStageInputs] = useState<Record<string, string | number>>({});
+  const [missingRequired, setMissingRequired] = useState<string[]>([]);
+  const [advanceError, setAdvanceError] = useState('');
+
   useEffect(() => {
     Promise.all([getLead(id), getDocuments(id)]).then(([lead, docs]) => {
       setLead(lead);
@@ -84,15 +130,90 @@ export default function LeadProfilePage() {
     });
   }, [id]);
 
-  const advanceStatus = async () => {
+  // Validate fields before advancing stage
+  function validateStageTransition(from: LeadStatus, to: LeadStatus, currentLead: Lead): string[] {
+    const key = `${from}_to_${to}`;
+    const checks = STAGE_REQUIREMENTS[key] || [];
+    return checks
+      .filter(c => c.required && !currentLead[c.field])
+      .map(c => c.label);
+  }
+
+  function getTransitionKey(from: LeadStatus, to: LeadStatus) {
+    return `${from}_to_${to}`;
+  }
+
+  // Open advance modal
+  const openAdvanceModal = () => {
     if (!lead) return;
     const currentIndex = STATUS_ORDER.indexOf(lead.status);
     if (currentIndex >= STATUS_ORDER.length - 1) return;
     const nextStatus = STATUS_ORDER[currentIndex + 1];
+    const missing = validateStageTransition(lead.status, nextStatus, lead);
+    const key = getTransitionKey(lead.status, nextStatus);
+    const inputs = STAGE_INPUTS[key] || [];
+    // Pre-fill inputs from existing lead data
+    const prefilled: Record<string, string | number> = {};
+    inputs.forEach(inp => {
+      const val = lead[inp.field];
+      if (val !== undefined && val !== null) prefilled[inp.field as string] = val as string | number;
+    });
+    setStageInputs(prefilled);
+    setMissingRequired(missing);
+    setAdvanceDirection('forward');
+    setAdvanceError('');
+    setShowAdvanceModal(true);
+  };
+
+  // Open go-back modal
+  const openGoBackModal = () => {
+    if (!lead) return;
+    const currentIndex = STATUS_ORDER.indexOf(lead.status);
+    if (currentIndex <= 0) return;
+    setStageInputs({});
+    setMissingRequired([]);
+    setAdvanceDirection('back');
+    setAdvanceError('');
+    setShowAdvanceModal(true);
+  };
+
+  // Execute the status change
+  const executeAdvance = async (skipValidation = false) => {
+    if (!lead) return;
+    const currentIndex = STATUS_ORDER.indexOf(lead.status);
+    const targetStatus = advanceDirection === 'forward'
+      ? STATUS_ORDER[currentIndex + 1]
+      : STATUS_ORDER[currentIndex - 1];
+    if (!targetStatus) return;
+
+    if (!skipValidation && advanceDirection === 'forward') {
+      const missing = validateStageTransition(lead.status, targetStatus, lead);
+      if (missing.length > 0) {
+        setMissingRequired(missing);
+        return; // Don't proceed
+      }
+    }
+
     setSaving(true);
-    const updated = await updateLead(id, { status: nextStatus });
-    if (updated) setLead(updated);
-    else setLead(prev => prev ? { ...prev, status: nextStatus } : null);
+    setAdvanceError('');
+
+    // Build update payload: status + any filled inputs
+    const updates: Partial<Lead> = { status: targetStatus };
+    if (advanceDirection === 'forward') {
+      Object.entries(stageInputs).forEach(([k, v]) => {
+        if (v !== '' && v !== undefined) {
+          (updates as Record<string, unknown>)[k] = typeof v === 'string' ? (isNaN(Number(v)) ? v : Number(v)) : v;
+        }
+      });
+    }
+
+    const updated = await updateLead(id, updates);
+    if (updated) {
+      setLead(updated);
+      setShowAdvanceModal(false);
+    } else {
+      setAdvanceError('שגיאה בשמירה. נסה שוב.');
+    }
     setSaving(false);
   };
 
@@ -127,7 +248,6 @@ export default function LeadProfilePage() {
     if (doc) {
       setDocuments(prev => [doc, ...prev]);
     } else {
-      // fallback: add locally
       setDocuments(prev => [{
         id: Math.random().toString(36).slice(2),
         lead_id: id,
@@ -161,6 +281,12 @@ export default function LeadProfilePage() {
 
   const currentStatusIndex = STATUS_ORDER.indexOf(lead.status);
   const nextStatus = STATUS_ORDER[currentStatusIndex + 1];
+  const prevStatus = STATUS_ORDER[currentStatusIndex - 1];
+  const advanceModalNextStatus = advanceDirection === 'forward'
+    ? STATUS_ORDER[currentStatusIndex + 1]
+    : STATUS_ORDER[currentStatusIndex - 1];
+  const transitionKey = nextStatus ? getTransitionKey(lead.status, nextStatus) : '';
+  const modalInputFields = transitionKey ? (STAGE_INPUTS[transitionKey] || []) : [];
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto">
@@ -256,6 +382,10 @@ export default function LeadProfilePage() {
                 <Input className="mt-1" type="number" value={editForm.total_price || ''} onChange={e => setEditForm(f => ({ ...f, total_price: Number(e.target.value) }))} />
               </div>
               <div>
+                <Label>עמלה (₪)</Label>
+                <Input className="mt-1" type="number" value={editForm.commission || ''} onChange={e => setEditForm(f => ({ ...f, commission: Number(e.target.value) }))} />
+              </div>
+              <div>
                 <Label>מבוגרים</Label>
                 <Input className="mt-1" type="number" min={1} value={editForm.adults || 1} onChange={e => setEditForm(f => ({ ...f, adults: Number(e.target.value) }))} />
               </div>
@@ -274,6 +404,105 @@ export default function LeadProfilePage() {
                 שמור שינויים
               </Button>
               <Button variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>ביטול</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stage Advancement Modal */}
+      <Dialog open={showAdvanceModal} onOpenChange={setShowAdvanceModal}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>
+              {advanceDirection === 'forward'
+                ? `קידום לשלב: ${advanceModalNextStatus ? LEAD_STATUS_LABELS[advanceModalNextStatus] : ''}`
+                : `החזרה לשלב: ${advanceModalNextStatus ? LEAD_STATUS_LABELS[advanceModalNextStatus] : ''}`}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Missing required fields warning */}
+            {missingRequired.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <p className="text-sm font-semibold text-amber-800">חסרים פרטים נדרשים:</p>
+                </div>
+                <ul className="space-y-1">
+                  {missingRequired.map(f => (
+                    <li key={f} className="text-xs text-amber-700 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-amber-600 mt-2">תוכל להשלים את הפרטים כעת או להמשיך בלעדיהם.</p>
+              </div>
+            )}
+
+            {/* Input fields for this stage */}
+            {advanceDirection === 'forward' && modalInputFields.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-sm text-slate-600 font-medium">פרטי שלב:</p>
+                {modalInputFields.map(inp => (
+                  <div key={inp.field as string}>
+                    <Label>{inp.label}</Label>
+                    <Input
+                      className="mt-1"
+                      type={inp.type}
+                      placeholder={inp.placeholder}
+                      value={stageInputs[inp.field as string] ?? ''}
+                      onChange={e => setStageInputs(prev => ({ ...prev, [inp.field as string]: e.target.value }))}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Back direction confirmation */}
+            {advanceDirection === 'back' && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4 text-orange-600 shrink-0" />
+                  <p className="text-sm text-orange-800">
+                    הליד יוחזר לשלב <strong>{advanceModalNextStatus ? LEAD_STATUS_LABELS[advanceModalNextStatus] : ''}</strong>. האם להמשיך?
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {advanceError && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" />{advanceError}
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-1">
+              {/* Main action button */}
+              <Button
+                className={`flex-1 ${advanceDirection === 'back' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+                onClick={() => executeAdvance(false)}
+                disabled={saving}
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
+                {advanceDirection === 'forward' ? 'קדם שלב' : 'החזר שלב'}
+              </Button>
+
+              {/* "Continue without required" — only shows when there are missing required fields */}
+              {missingRequired.length > 0 && advanceDirection === 'forward' && (
+                <Button
+                  variant="outline"
+                  className="flex-1 text-slate-600"
+                  onClick={() => executeAdvance(true)}
+                  disabled={saving}
+                >
+                  המשך בלי הפרטים
+                </Button>
+              )}
+
+              <Button variant="outline" onClick={() => setShowAdvanceModal(false)} disabled={saving}>
+                ביטול
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -298,22 +527,37 @@ export default function LeadProfilePage() {
             ))}
           </div>
 
-          {nextStatus && (
-            <Button
-              onClick={advanceStatus}
-              disabled={saving}
-              className={`w-full md:w-auto ${STATUS_NEXT_COLORS[lead.status]} text-white font-semibold py-2 px-6`}
-            >
-              {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
-              ← קדם לשלב: {LEAD_STATUS_LABELS[nextStatus]}
-            </Button>
-          )}
-          {!nextStatus && (
-            <div className="text-sm text-slate-500 flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              הושלמו כל השלבים
-            </div>
-          )}
+          <div className="flex gap-2 flex-wrap">
+            {nextStatus && (
+              <Button
+                onClick={openAdvanceModal}
+                disabled={saving}
+                className={`${STATUS_NEXT_COLORS[lead.status]} text-white font-semibold py-2 px-6`}
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
+                קדם לשלב: {LEAD_STATUS_LABELS[nextStatus]}
+              </Button>
+            )}
+
+            {prevStatus && (
+              <Button
+                onClick={openGoBackModal}
+                disabled={saving}
+                variant="outline"
+                className="gap-1.5 text-slate-600 border-slate-300 hover:bg-slate-50"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                החזר שלב
+              </Button>
+            )}
+
+            {!nextStatus && (
+              <div className="text-sm text-slate-500 flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                הושלמו כל השלבים
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -482,8 +726,6 @@ export default function LeadProfilePage() {
                   </span>
                 </div>
               )}
-
-              {/* Payment status summary */}
               <div className="pt-2 border-t border-slate-200">
                 {!lead.total_price ? (
                   <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -627,7 +869,7 @@ export default function LeadProfilePage() {
                   <Badge className={`${LEAD_STATUS_COLORS[status]} border`}>
                     {LEAD_STATUS_LABELS[status]}
                   </Badge>
-                  {isCurrentStage && <span className="text-xs text-blue-600 font-medium">← שלב נוכחי</span>}
+                  {isCurrentStage && <span className="text-xs text-blue-600 font-medium">שלב נוכחי</span>}
                 </div>
                 <div className="space-y-2 mb-4">
                   {templates.map((tpl, i) => (
