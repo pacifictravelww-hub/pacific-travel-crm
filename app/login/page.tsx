@@ -92,12 +92,6 @@ export default function LoginPage() {
 
         <div className="relative w-full max-w-sm mt-40 md:mt-0">
 
-          {/* Heading */}
-          <div className="mb-8 text-right">
-            <h1 className="text-2xl font-bold text-white mb-1">כניסה למערכת</h1>
-            <p className="text-slate-400 text-sm">הכנס את פרטיך להמשך</p>
-          </div>
-
           {/* Card */}
           <div className="rounded-3xl p-7"
             style={{
