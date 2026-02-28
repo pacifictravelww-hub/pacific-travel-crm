@@ -58,17 +58,17 @@ function PendingUserRow({
 
   return (
     <TableRow>
-      <TableCell className="font-medium">{user.full_name || '—'}</TableCell>
-      <TableCell>{user.email}</TableCell>
-      <TableCell>
+      <TableCell className="font-medium text-slate-200">{user.full_name || '—'}</TableCell>
+      <TableCell className="text-slate-300">{user.email}</TableCell>
+      <TableCell className="text-slate-300">
         <Badge variant={roleLabels[user.role]?.variant || 'outline'}>
           {roleLabels[user.role]?.label || user.role}
         </Badge>
       </TableCell>
-      <TableCell className="text-sm text-slate-500">
+      <TableCell className="text-sm text-slate-400">
         {new Date(user.created_at).toLocaleDateString('he-IL')}
       </TableCell>
-      <TableCell>
+      <TableCell className="text-slate-300">
         <div className="flex items-center gap-2">
           <Select value={approveRole} onValueChange={setApproveRole}>
             <SelectTrigger className="w-28 h-8 text-xs">
@@ -337,14 +337,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto" dir="rtl">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">הגדרות</h1>
+    <div className="p-4 md:p-6 min-h-screen" dir="rtl"
+      style={{ background: 'linear-gradient(160deg, #0a0f1e 0%, #0f1a38 50%, #1a0a2e 100%)' }}>
+      <div className="max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold text-white mb-6">הגדרות</h1>
 
       <Tabs defaultValue="profile" dir="rtl" onValueChange={(val) => {
           if (val === 'users') loadUsers();
           if (val === 'approvals') loadPendingUsers();
         }}>
-        <TabsList className="mb-6 w-full justify-start">
+        <TabsList className="mb-6 w-full justify-start bg-white/5 border border-white/10">
           <TabsTrigger value="profile">פרופיל</TabsTrigger>
           <TabsTrigger value="general">כללי</TabsTrigger>
           <TabsTrigger value="integrations">אינטגרציות</TabsTrigger>
@@ -363,10 +365,10 @@ export default function SettingsPage() {
 
         {/* Profile Tab */}
         <TabsContent value="profile">
-          <Card>
+          <Card className="bg-white/4 backdrop-blur-xl border-white/8 bg-white/4 backdrop-blur-xl border-white/8">
             <CardHeader>
-              <CardTitle>פרופיל אישי</CardTitle>
-              <CardDescription>עדכן את פרטי הפרופיל שלך</CardDescription>
+              <CardTitle className="text-white">פרופיל אישי</CardTitle>
+              <CardDescription className="text-slate-400">עדכן את פרטי הפרופיל שלך</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Avatar */}
@@ -377,10 +379,10 @@ export default function SettingsPage() {
                     {(displayName || user?.email || '?').slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-white/15 rounded-md hover:bg-white/5 transition-colors">
                   <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} disabled={uploadingAvatar} />
-                  <Camera className="w-4 h-4 text-slate-600" />
-                  <span className="text-slate-700">{uploadingAvatar ? 'מעלה...' : 'שנה תמונה'}</span>
+                  <Camera className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-200">{uploadingAvatar ? 'מעלה...' : 'שנה תמונה'}</span>
                 </label>
               </div>
 
@@ -396,7 +398,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>אימייל</Label>
-                  <Input value={user?.email || ''} readOnly className="bg-slate-100 text-slate-500" />
+                  <Input value={user?.email || ''} readOnly className="bg-white/5 text-slate-400" />
                   <p className="text-xs text-slate-400">לא ניתן לשנות את האימייל</p>
                 </div>
                 <div className="space-y-2">
@@ -411,7 +413,7 @@ export default function SettingsPage() {
                 <Button onClick={handleSaveProfile} disabled={saving}>
                   {saving ? 'שומר...' : 'שמור שינויים'}
                 </Button>
-                {saveMsg && <span className="text-sm text-green-600">{saveMsg}</span>}
+                {saveMsg && <span className="text-sm text-green-400">{saveMsg}</span>}
               </div>
             </CardContent>
           </Card>
@@ -420,12 +422,12 @@ export default function SettingsPage() {
         {/* User Management Tab */}
         <TabsContent value="users">
           <RoleGuard roles={['admin', 'developer']}>
-            <Card>
+            <Card className="bg-white/4 backdrop-blur-xl border-white/8 bg-white/4 backdrop-blur-xl border-white/8">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>ניהול משתמשים</CardTitle>
-                    <CardDescription>נהל את משתמשי המערכת</CardDescription>
+                    <CardTitle className="text-white">ניהול משתמשים</CardTitle>
+                    <CardDescription className="text-slate-400">נהל את משתמשי המערכת</CardDescription>
                   </div>
                   <Button onClick={() => setShowAddUser(true)} className="flex items-center gap-2">
                     <UserPlus className="w-4 h-4" />
@@ -440,36 +442,36 @@ export default function SettingsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-right">שם</TableHead>
-                        <TableHead className="text-right">אימייל</TableHead>
-                        <TableHead className="text-right">תפקיד</TableHead>
-                        <TableHead className="text-right">סטטוס</TableHead>
-                        <TableHead className="text-right">פעולות</TableHead>
+                        <TableHead className="text-right text-slate-300">שם</TableHead>
+                        <TableHead className="text-right text-slate-300">אימייל</TableHead>
+                        <TableHead className="text-right text-slate-300">תפקיד</TableHead>
+                        <TableHead className="text-right text-slate-300">סטטוס</TableHead>
+                        <TableHead className="text-right text-slate-300">פעולות</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {users.map((u) => (
                         <TableRow key={u.id}>
-                          <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
-                          <TableCell>{u.email}</TableCell>
-                          <TableCell>
+                          <TableCell className="font-medium text-slate-200">{u.full_name || '—'}</TableCell>
+                          <TableCell className="text-slate-300">{u.email}</TableCell>
+                          <TableCell className="text-slate-300">
                             <Badge variant={roleLabels[u.role]?.variant || 'outline'}>
                               {roleLabels[u.role]?.label || u.role}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-slate-300">
                             <div className="flex flex-col gap-1">
                               {/* Approval status */}
                               {(u as Profile & { status?: string }).status === 'approved' ? (
-                                <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
+                                <span className="flex items-center gap-1 text-green-400 text-xs font-medium">
                                   <CheckCircle className="w-3.5 h-3.5" /> מאושר
                                 </span>
                               ) : (u as Profile & { status?: string }).status === 'pending' ? (
-                                <span className="flex items-center gap-1 text-amber-500 text-xs font-medium">
+                                <span className="flex items-center gap-1 text-amber-400 text-xs font-medium">
                                   <Clock className="w-3.5 h-3.5" /> ממתין לאישור
                                 </span>
                               ) : (u as Profile & { status?: string }).status === 'suspended' ? (
-                                <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
+                                <span className="flex items-center gap-1 text-red-400 text-xs font-medium">
                                   <XCircle className="w-3.5 h-3.5" /> מושעה
                                 </span>
                               ) : (
@@ -483,7 +485,7 @@ export default function SettingsPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-slate-300">
                             <div className="flex items-center gap-1 flex-wrap">
                               <Button
                                 variant="ghost"
@@ -504,14 +506,14 @@ export default function SettingsPage() {
                                 <KeyRound className="w-4 h-4" />
                               </Button>
                               {resetMsg?.id === u.id && (
-                                <span className="text-xs text-green-600 mr-1">{resetMsg.msg}</span>
+                                <span className="text-xs text-green-400 mr-1">{resetMsg.msg}</span>
                               )}
                               {u.is_active && u.id !== user?.id && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDeactivate(u.id)}
-                                  className="text-slate-500 hover:text-red-500 h-8 px-2"
+                                  className="text-slate-400 hover:text-red-400 h-8 px-2"
                                   title="השבת משתמש"
                                 >
                                   <UserX className="w-4 h-4" />
@@ -520,11 +522,11 @@ export default function SettingsPage() {
                               {profile?.role === 'developer' && u.id !== user?.id && (
                                 confirmDeleteId === u.id ? (
                                   <div className="flex items-center gap-1">
-                                    <span className="text-xs text-red-500">בטוח?</span>
+                                    <span className="text-xs text-red-400">בטוח?</span>
                                     <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(u.id)}
-                                      className="text-red-500 hover:text-red-700 h-7 px-2 text-xs">כן</Button>
+                                      className="text-red-400 hover:text-red-700 h-7 px-2 text-xs">כן</Button>
                                     <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)}
-                                      className="text-slate-500 h-7 px-2 text-xs">לא</Button>
+                                      className="text-slate-400 h-7 px-2 text-xs">לא</Button>
                                   </div>
                                 ) : (
                                   <Button
@@ -549,7 +551,7 @@ export default function SettingsPage() {
             </Card>
           </RoleGuard>
           <div className="hidden" id="no-access-users">
-            <Card>
+            <Card className="bg-white/4 backdrop-blur-xl border-white/8 bg-white/4 backdrop-blur-xl border-white/8">
               <CardContent className="py-12 text-center text-slate-400">
                 אין לך הרשאה לצפות בדף זה
               </CardContent>
@@ -559,14 +561,14 @@ export default function SettingsPage() {
 
         {/* Pending Approvals Tab */}
         <TabsContent value="approvals">
-          <Card>
+          <Card className="bg-white/4 backdrop-blur-xl border-white/8 bg-white/4 backdrop-blur-xl border-white/8">
             <CardHeader>
-              <CardTitle>אישורים ממתינים</CardTitle>
-              <CardDescription>משתמשים הממתינים לאישור גישה למערכת</CardDescription>
+              <CardTitle className="text-white">אישורים ממתינים</CardTitle>
+              <CardDescription className="text-slate-400">משתמשים הממתינים לאישור גישה למערכת</CardDescription>
             </CardHeader>
             <CardContent>
               {approvalMsg && (
-                <div className="mb-4 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">{approvalMsg}</div>
+                <div className="mb-4 text-sm text-green-400 bg-green-500/10 border border-green-500/25 rounded-lg p-3">{approvalMsg}</div>
               )}
               {loadingPending ? (
                 <div className="text-center py-8 text-slate-400">טוען...</div>
@@ -579,11 +581,11 @@ export default function SettingsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">שם</TableHead>
-                      <TableHead className="text-right">אימייל</TableHead>
-                      <TableHead className="text-right">תפקיד מבוקש</TableHead>
-                      <TableHead className="text-right">תאריך הרשמה</TableHead>
-                      <TableHead className="text-right">פעולות</TableHead>
+                      <TableHead className="text-right text-slate-300">שם</TableHead>
+                      <TableHead className="text-right text-slate-300">אימייל</TableHead>
+                      <TableHead className="text-right text-slate-300">תפקיד מבוקש</TableHead>
+                      <TableHead className="text-right text-slate-300">תאריך הרשמה</TableHead>
+                      <TableHead className="text-right text-slate-300">פעולות</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -613,12 +615,12 @@ export default function SettingsPage() {
               <Card key={integration.name}>
                 <CardHeader>
                   <div className="text-3xl mb-2">{integration.icon}</div>
-                  <CardTitle className="text-lg">{integration.name}</CardTitle>
-                  <CardDescription>{integration.desc}</CardDescription>
+                  <CardTitle className="text-lg text-white">{integration.name}</CardTitle>
+                  <CardDescription className="text-slate-400">{integration.desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <span className={`flex items-center gap-1 text-sm ${integration.connected ? 'text-green-600' : 'text-slate-400'}`}>
+                    <span className={`flex items-center gap-1 text-sm ${integration.connected ? 'text-green-400' : 'text-slate-400'}`}>
                       {integration.connected ? (
                         <><CheckCircle className="w-4 h-4" /> מחובר</>
                       ) : (
@@ -635,10 +637,10 @@ export default function SettingsPage() {
 
         {/* General Tab */}
         <TabsContent value="general">
-          <Card>
+          <Card className="bg-white/4 backdrop-blur-xl border-white/8 bg-white/4 backdrop-blur-xl border-white/8">
             <CardHeader>
-              <CardTitle>הגדרות כלליות</CardTitle>
-              <CardDescription>הגדרות הסוכנות שלך</CardDescription>
+              <CardTitle className="text-white">הגדרות כלליות</CardTitle>
+              <CardDescription className="text-slate-400">הגדרות הסוכנות שלך</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -648,14 +650,14 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>לוגו סוכנות</Label>
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-xl border-2 border-slate-200 flex items-center justify-center overflow-hidden bg-slate-50">
+                  <div className="w-20 h-20 rounded-xl border-2 border-white/15 flex items-center justify-center overflow-hidden bg-white/5">
                     {logoUrl
                       ? <img src={logoUrl} alt="לוגו" className="w-full h-full object-contain p-1" />
                       : <span className="text-3xl">✈️</span>
                     }
                   </div>
                   <div className="space-y-2">
-                    <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-white/15 rounded-md hover:bg-white/5 transition-colors">
                       <input
                         type="file"
                         accept="image/*"
@@ -663,8 +665,8 @@ export default function SettingsPage() {
                         onChange={handleLogoUpload}
                         disabled={uploadingLogo}
                       />
-                      <Camera className="w-4 h-4 text-slate-600" />
-                      <span className="text-slate-700">{uploadingLogo ? 'מעלה...' : 'העלה לוגו'}</span>
+                      <Camera className="w-4 h-4 text-slate-400" />
+                      <span className="text-slate-200">{uploadingLogo ? 'מעלה...' : 'העלה לוגו'}</span>
                     </label>
                     <p className="text-xs text-slate-400">PNG / JPG / SVG מומלץ — מינימום 200×200px</p>
                   </div>
@@ -705,10 +707,10 @@ export default function SettingsPage() {
 
       {/* Add User Modal */}
       <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="rtl" className="bg-[#0f1a38] border-white/10">
           <DialogHeader>
-            <DialogTitle>הוסף משתמש חדש</DialogTitle>
-            <DialogDescription>שלח הזמנה לכתובת אימייל</DialogDescription>
+            <DialogTitle className="text-white">הוסף משתמש חדש</DialogTitle>
+            <DialogDescription className="text-slate-400">שלח הזמנה לכתובת אימייל</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -743,7 +745,7 @@ export default function SettingsPage() {
               </Select>
             </div>
             {addMsg && (
-              <p className={`text-sm ${addMsg.startsWith('שגיאה') ? 'text-red-500' : 'text-green-600'}`}>
+              <p className={`text-sm ${addMsg.startsWith('שגיאה') ? 'text-red-400' : 'text-green-400'}`}>
                 {addMsg}
               </p>
             )}
@@ -759,9 +761,9 @@ export default function SettingsPage() {
 
       {/* Edit User Modal */}
       <Dialog open={!!editingUser} onOpenChange={open => !open && setEditingUser(null)}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="rtl" className="bg-[#0f1a38] border-white/10">
           <DialogHeader>
-            <DialogTitle>עריכת משתמש — {editingUser?.email}</DialogTitle>
+            <DialogTitle className="text-white">עריכת משתמש — {editingUser?.email}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
@@ -803,6 +805,7 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }
