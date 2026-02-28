@@ -119,11 +119,39 @@ export default function SettingsPage() {
   };
 
   const handleApprove = async (userId: string, role: string) => {
+    // Fetch the user's email + name before updating
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', userId)
+      .single();
+
     await supabaseClient
       .from('profiles')
       .update({ status: 'approved', role, updated_at: new Date().toISOString() })
       .eq('id', userId);
-    setApprovalMsg('המשתמש אושר!');
+
+    // Send approval email
+    if (profile?.email) {
+      try {
+        await fetch('/api/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'user_approved',
+            to: profile.email,
+            data: {
+              userName: profile.full_name || profile.email,
+              loginUrl: `${window.location.origin}/login`,
+            },
+          }),
+        });
+      } catch (e) {
+        console.warn('Approval email failed:', e);
+      }
+    }
+
+    setApprovalMsg('המשתמש אושר ונשלח אליו אימייל!');
     setTimeout(() => setApprovalMsg(''), 3000);
     loadPendingUsers();
   };
