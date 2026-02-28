@@ -178,7 +178,6 @@ export default function PendingApprovalPage() {
           </button>
         </div>
 
-        <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW</p>
       </div>
     </div>
   );

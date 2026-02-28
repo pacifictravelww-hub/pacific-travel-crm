@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Lock, Loader2, AlertCircle, CheckCircle2, Plane } from 'lucide-react';
+import { Lock, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function ResetPasswordPage() {
@@ -80,12 +80,6 @@ export default function ResetPasswordPage() {
         <div className="md:hidden absolute top-0 left-0 right-0 h-48 overflow-hidden">
           <Image src="/banner-hero.jpg" alt="Pacific Travel" fill className="object-cover object-center" priority />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,15,30,0.3) 0%, rgba(10,15,30,1) 100%)' }} />
-          <div className="absolute bottom-4 right-4 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
-              <Plane className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white font-bold text-lg">Pacific Travel</span>
-          </div>
         </div>
 
         <div className="relative w-full max-w-sm mt-40 md:mt-0">
@@ -167,7 +161,6 @@ export default function ResetPasswordPage() {
             </>
           )}
 
-          <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW</p>
         </div>
       </div>
     </div>

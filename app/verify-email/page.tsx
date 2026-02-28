@@ -110,7 +110,7 @@ function VerifyEmailContent() {
           <div className="mb-8 space-y-3 text-right">
             {[
               { num: '1', text: 'פתח את תיבת הדואר שלך', color: 'text-blue-400' },
-              { num: '2', text: 'חפש מייל מ-Pacific Travel CRM', color: 'text-purple-400' },
+              { num: '2', text: 'חפש מייל מ-Pacific Travel', color: 'text-purple-400' },
               { num: '3', text: 'לחץ על "אמת כתובת אימייל"', color: 'text-green-400' },
             ].map(step => (
               <div key={step.num} className="flex items-center gap-3 px-4 py-3 rounded-xl"
@@ -166,7 +166,6 @@ function VerifyEmailContent() {
 
         {/* Pacific Travel branding */}
         <div className="text-center mt-6">
-          <p className="text-slate-600 text-xs">Pacific Travel WW</p>
         </div>
       </div>
     </div>

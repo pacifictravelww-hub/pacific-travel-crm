@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Plane, Loader2, AlertCircle, User, Mail, Lock, CheckCircle2 } from 'lucide-react';
+import { Loader2, AlertCircle, User, Mail, Lock, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { signInWithGoogle } from '@/lib/auth';
 
@@ -127,7 +127,6 @@ export default function RegisterPage() {
               חזור ונסה שוב
             </button>
           </div>
-          <p className="text-slate-700 text-xs mt-6">Pacific Travel WW</p>
         </div>
       </div>
     );
@@ -144,21 +143,7 @@ export default function RegisterPage() {
           style={{ background: 'linear-gradient(to top, rgba(5,10,30,0.92) 0%, rgba(5,10,30,0.3) 50%, rgba(5,10,30,0.15) 100%)' }} />
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to right, rgba(10,15,30,1) 0%, rgba(15,26,56,0.8) 8%, transparent 35%)' }} />
-        <div className="relative z-10 p-12 w-full text-right">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', boxShadow: '0 0 30px rgba(59,130,246,0.5)' }}>
-              <Plane className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-white">Pacific Travel</span>
-          </div>
-          <h2 className="text-4xl font-bold text-white leading-tight mb-3">
-            הצטרף לצוות<br />Pacific Travel
-          </h2>
-          <p className="text-blue-200/70 text-lg max-w-sm">
-            צור חשבון וקבל גישה לכלי הניהול המתקדמים ביותר לסוכני נסיעות.
-          </p>
-        </div>
+
       </div>
 
       {/* === Form Panel === */}
@@ -172,13 +157,6 @@ export default function RegisterPage() {
         <div className="md:hidden absolute top-0 left-0 right-0 h-48 overflow-hidden">
           <Image src="/banner-hero.jpg" alt="Pacific Travel" fill className="object-cover object-center" priority />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,15,30,0.3) 0%, rgba(10,15,30,1) 100%)' }} />
-          <div className="absolute bottom-4 right-4 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
-              <Plane className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white font-bold text-lg">Pacific Travel</span>
-          </div>
         </div>
 
         <div className="relative w-full max-w-sm mt-40 md:mt-0">
@@ -298,7 +276,6 @@ export default function RegisterPage() {
               <Link href="/login" className="text-blue-400 hover:text-blue-300 transition-colors">התחבר כאן</Link>
             </p>
           </div>
-          <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW</p>
         </div>
       </div>
     </div>

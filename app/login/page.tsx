@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plane, Loader2, AlertCircle, Lock, Mail } from 'lucide-react';
+import { Loader2, AlertCircle, Lock, Mail } from 'lucide-react';
 import { signIn, signInWithGoogle } from '@/lib/auth';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -69,13 +69,7 @@ export default function LoginPage() {
         <div className="md:hidden absolute top-0 left-0 right-0 h-48 overflow-hidden">
           <Image src="/banner-hero.jpg" alt="Pacific Travel" fill className="object-cover object-center" priority />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,15,30,0.3) 0%, rgba(10,15,30,1) 100%)' }} />
-          <div className="absolute bottom-4 right-4 flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
-              <Plane className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-white font-bold text-lg">Pacific Travel</span>
-          </div>
+
         </div>
 
         <div className="relative w-full max-w-sm mt-40 md:mt-0">
@@ -188,7 +182,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW</p>
+
         </div>
       </div>
     </div>
