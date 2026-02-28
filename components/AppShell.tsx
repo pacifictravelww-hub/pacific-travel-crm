@@ -91,7 +91,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <main className="flex-1 overflow-y-auto w-full">
           {/* Agency Banner */}
-          <div className="w-full overflow-hidden relative shrink-0" style={{ height: '120px' }}>
+          <div className="w-full overflow-hidden relative shrink-0" style={{ height: '150px' }}>
             <img
               src="/banner-hero-wide.jpg"
               alt="Pacific Travel WW"
