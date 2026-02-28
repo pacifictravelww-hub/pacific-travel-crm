@@ -1,16 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
-  Plane, FileText, CreditCard, Phone, Loader2,
+  Plane, FileText, Phone, Loader2,
   Calendar, MapPin, Hotel, Users, CheckCircle2,
   Clock, AlertTriangle, MessageCircle, ChevronDown,
-  ChevronUp, FileWarning, Wallet, User
+  ChevronUp, FileWarning, User, LogOut, Upload, Plus
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { getLeadsByEmail, getLeadsByPhone, getDocuments } from '@/lib/leads';
+import { getLeadsByEmail, getLeadsByPhone, getDocuments, addDocument } from '@/lib/leads';
 import { Lead, Document, LEAD_STATUS_LABELS, VACATION_TYPE_LABELS, BOARD_BASIS_LABELS, HOTEL_LEVEL_LABELS } from '@/lib/data';
+import { signOut } from '@/lib/auth';
 
 const MONTH_NAMES = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 
@@ -38,111 +43,209 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   voucher: '🏨 אישור מלון', contract: '📄 חוזה', other: '📎 אחר',
 };
 
+// ── Upload Doc Modal ──────────────────────────────────────────────────────
+function UploadDocModal({ leadId, leadDest, open, onClose }: {
+  leadId: string; leadDest: string; open: boolean; onClose: (doc?: Document) => void;
+}) {
+  const [form, setForm] = useState({ type: 'passport', name: '', expiry_date: '' });
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = async () => {
+    if (!form.name) return;
+    setUploading(true);
+    let url = '#';
+    if (file) {
+      const ext = file.name.split('.').pop();
+      const path = `leads/${leadId}/documents/${Date.now()}_${form.name.replace(/\s+/g,'_')}.${ext}`;
+      const { data: up, error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (!error && up) {
+        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+        url = urlData.publicUrl;
+      }
+    }
+    const doc = await addDocument({
+      lead_id: leadId,
+      type: form.type as Document['type'],
+      name: form.name,
+      expiry_date: form.expiry_date || undefined,
+      url,
+    });
+    setUploading(false);
+    onClose(doc || undefined);
+    setForm({ type: 'passport', name: '', expiry_date: '' });
+    setFile(null);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={() => onClose()}>
+      <DialogContent dir="rtl" className="border-white/10 max-w-md" style={{ background: '#0a1628' }}>
+        <DialogHeader>
+          <DialogTitle className="text-white">העלאת מסמך — {leadDest}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 pt-2">
+          <div>
+            <Label className="text-slate-300">סוג מסמך</Label>
+            <select
+              className="w-full mt-1 border border-white/20 rounded-md px-3 py-2 text-sm text-white"
+              style={{ background: 'rgba(255,255,255,0.05)' }}
+              value={form.type}
+              onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
+            >
+              {Object.entries({ passport: 'דרכון', visa: 'ויזה', ticket: 'כרטיס טיסה', voucher: "אישור מלון", contract: 'חוזה', other: 'אחר' }).map(([v, l]) => (
+                <option key={v} value={v} style={{ background: '#0a1628' }}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label className="text-slate-300">שם המסמך</Label>
+            <Input
+              className="mt-1 bg-white/5 border-white/20 text-white placeholder:text-slate-500"
+              placeholder="לדוגמה: דרכון — ישראל ישראלי"
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="text-slate-300">תאריך תפוגה (אופציונלי)</Label>
+            <Input className="mt-1 bg-white/5 border-white/20 text-white" type="date"
+              value={form.expiry_date}
+              onChange={e => setForm(f => ({ ...f, expiry_date: e.target.value }))}
+            />
+          </div>
+          {/* File upload drop zone */}
+          <div>
+            <Label className="text-slate-300">קובץ</Label>
+            <div
+              className="mt-1 border-2 border-dashed border-white/20 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-all"
+              onClick={() => fileRef.current?.click()}
+            >
+              <input ref={fileRef} type="file" hidden accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={e => setFile(e.target.files?.[0] || null)} />
+              <Upload className="w-6 h-6 mx-auto mb-2 text-slate-500" />
+              {file
+                ? <p className="text-sm text-blue-300 font-medium">{file.name}</p>
+                : <><p className="text-sm text-slate-400">לחץ לבחירת קובץ</p><p className="text-xs text-slate-600 mt-0.5">PDF, JPG, PNG, DOC</p></>
+              }
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button onClick={handleSave} disabled={!form.name || uploading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Upload className="w-4 h-4 ml-2" />}
+              {uploading ? 'מעלה...' : 'שמור מסמך'}
+            </Button>
+            <Button variant="outline" onClick={() => onClose()} className="border-white/20 text-white bg-transparent">ביטול</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Trip Card ──────────────────────────────────────────────────────────────
-function TripCard({ lead, docs, agentProfile }: {
-  lead: Lead; docs: Document[]; agentProfile: { full_name: string; phone?: string } | null;
+function TripCard({ lead, docs, agentProfile, onDocsUpdate }: {
+  lead: Lead;
+  docs: Document[];
+  agentProfile: { full_name: string; phone?: string } | null;
+  onDocsUpdate: (leadId: string, newDoc: Document) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const st = STATUS_STYLE[lead.status] ?? STATUS_STYLE.lead;
   const StatusIcon = st.icon;
   const daysToGo = daysUntil(lead.departure_date);
   const isPast = lead.status === 'returned';
   const isCurrent = lead.status === 'flying';
-  const remaining = (lead.total_price || 0) - (lead.deposit_amount || 0);
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.03)' }}>
-      {/* Header */}
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
-              <h3 className="text-lg font-bold text-white">{lead.destination || 'יעד לא צוין'}</h3>
-            </div>
-            {lead.vacation_type && (
-              <span className="text-xs text-slate-400">{VACATION_TYPE_LABELS[lead.vacation_type]}</span>
-            )}
+      {/* Destination hero image */}
+      {lead.destination && !imgError && (
+        <div className="relative h-32 overflow-hidden">
+          <img
+            src={`https://picsum.photos/seed/${encodeURIComponent(lead.destination + '_travel')}/800/250`}
+            alt={lead.destination}
+            className="w-full h-full object-cover opacity-50"
+            onError={() => setImgError(true)}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          <div className="absolute bottom-3 right-4 flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-white/80" />
+            <span className="text-white font-bold text-base">{lead.destination}</span>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          {isCurrent && (
+            <div className="absolute top-3 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-purple-300 animate-pulse"
+              style={{ background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.4)' }}>
+              <Plane className="w-3 h-3" /> בנסיעה עכשיו!
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="p-5">
+        {!lead.destination || imgError ? (
+          <div className="flex items-center gap-2 mb-4">
+            <MapPin className="w-4 h-4 text-blue-400" />
+            <h3 className="text-lg font-bold text-white">{lead.destination || 'יעד לא צוין'}</h3>
+          </div>
+        ) : null}
+
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
               style={{ background: st.bg, color: st.color }}>
               <StatusIcon className="w-3.5 h-3.5" />
               {st.label}
             </div>
-            {isCurrent && (
-              <div className="flex items-center gap-1 text-xs text-purple-400 animate-pulse">
-                <Plane className="w-3 h-3" /> אתה בנסיעה עכשיו!
-              </div>
-            )}
-            {!isPast && !isCurrent && daysToGo !== null && daysToGo > 0 && (
-              <div className="text-xs text-slate-400">
-                {daysToGo} ימים ליציאה
-              </div>
+            {lead.vacation_type && (
+              <span className="text-xs text-slate-400">{VACATION_TYPE_LABELS[lead.vacation_type]}</span>
             )}
           </div>
-        </div>
-
-        {/* Dates + travelers row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {lead.departure_date && (
-            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              <p className="text-xs text-slate-500 mb-1">יציאה</p>
-              <p className="text-sm font-medium text-white">{formatDate(lead.departure_date)}</p>
-            </div>
-          )}
-          {lead.return_date && (
-            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              <p className="text-xs text-slate-500 mb-1">חזרה</p>
-              <p className="text-sm font-medium text-white">{formatDate(lead.return_date)}</p>
-            </div>
-          )}
-          {lead.adults && (
-            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              <p className="text-xs text-slate-500 mb-1">נוסעים</p>
-              <p className="text-sm font-medium text-white flex items-center gap-1"><Users className="w-3.5 h-3.5 text-blue-400" />{lead.adults}</p>
-            </div>
-          )}
-          {lead.hotel_preference && (
-            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
-              <p className="text-xs text-slate-500 mb-1">מלון</p>
-              <p className="text-sm font-medium text-white truncate">{lead.hotel_preference}</p>
+          {!isPast && !isCurrent && daysToGo !== null && daysToGo > 0 && (
+            <div className="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded-full border border-white/10">
+              {daysToGo} ימים ליציאה
             </div>
           )}
         </div>
 
-        {/* Payment mini-bar */}
-        {lead.total_price && lead.total_price > 0 && (
-          <div className="rounded-xl p-3 mb-4" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.15)' }}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-400">סה"כ לתשלום</span>
-              <span className="text-sm font-bold text-white">₪{lead.total_price.toLocaleString()}</span>
+        {/* Dates + travelers */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+          {[
+            lead.departure_date && { label: 'יציאה', value: formatDate(lead.departure_date) },
+            lead.return_date && { label: 'חזרה', value: formatDate(lead.return_date) },
+            lead.adults && { label: 'נוסעים', value: `${lead.adults} אנשים` },
+            lead.hotel_level && { label: 'מלון', value: HOTEL_LEVEL_LABELS[lead.hotel_level] },
+          ].filter(Boolean).map((item, i) => item && (
+            <div key={i} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <p className="text-xs text-slate-500 mb-1">{item.label}</p>
+              <p className="text-sm font-medium text-white">{item.value}</p>
             </div>
-            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-              <div className="h-full rounded-full transition-all"
-                style={{ width: `${Math.min(((lead.deposit_amount || 0) / lead.total_price) * 100, 100)}%`, background: 'linear-gradient(90deg,#34d399,#10b981)' }} />
-            </div>
-            <div className="flex justify-between mt-1.5 text-xs">
-              <span className="text-emerald-400">שולם: ₪{(lead.deposit_amount || 0).toLocaleString()}</span>
-              {remaining > 0 && <span className="text-amber-400">יתרה: ₪{remaining.toLocaleString()}</span>}
-              {remaining <= 0 && <span className="text-emerald-400">✓ שולם במלואו</span>}
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {/* Expand button */}
-        <button onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs text-slate-400 transition-colors hover:text-slate-200"
-          style={{ background: 'rgba(255,255,255,0.04)' }}>
-          {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          {expanded ? 'פחות פרטים' : 'כל הפרטים'}
-        </button>
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          <button onClick={() => setExpanded(!expanded)}
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs text-slate-400 hover:text-slate-200 transition-all"
+            style={{ background: 'rgba(255,255,255,0.04)' }}>
+            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {expanded ? 'פחות פרטים' : 'כל הפרטים'}
+          </button>
+          <button
+            onClick={() => setShowUpload(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-blue-300 hover:text-blue-200 transition-all"
+            style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)' }}>
+            <Upload className="w-3.5 h-3.5" />
+            העלה מסמך
+          </button>
+        </div>
       </div>
 
-      {/* Expanded details */}
+      {/* Expanded section */}
       {expanded && (
         <div className="border-t px-5 pb-5 pt-4 space-y-4" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-          {/* Hotel details */}
           {(lead.hotel_level || lead.board_basis) && (
             <div>
               <p className="text-xs text-slate-500 mb-2 flex items-center gap-1"><Hotel className="w-3.5 h-3.5" /> פרטי מלון</p>
@@ -154,29 +257,42 @@ function TripCard({ lead, docs, agentProfile }: {
           )}
 
           {/* Documents for this trip */}
-          {docs.length > 0 && (
-            <div>
-              <p className="text-xs text-slate-500 mb-2 flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> מסמכים ({docs.length})</p>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-slate-500 flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> מסמכים ({docs.length})</p>
+              <button onClick={() => setShowUpload(true)}
+                className="text-xs text-blue-400 hover:underline flex items-center gap-1">
+                <Plus className="w-3 h-3" />הוסף
+              </button>
+            </div>
+            {docs.length === 0 ? (
+              <p className="text-xs text-slate-600">אין מסמכים לנסיעה זו</p>
+            ) : (
               <div className="space-y-1.5">
                 {docs.map(doc => {
                   const exp = daysUntil(doc.expiry_date);
                   return (
                     <div key={doc.id} className="flex items-center justify-between px-3 py-2 rounded-lg"
                       style={{ background: 'rgba(255,255,255,0.04)' }}>
-                      <span className="text-xs text-slate-300">{DOC_TYPE_LABELS[doc.type] || doc.type}</span>
-                      {doc.expiry_date && (
-                        <span className={`text-xs ${exp !== null && exp < 0 ? 'text-red-400' : exp !== null && exp < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                          {exp !== null && exp < 0 ? '⚠️ פג תוקף' : `תוקף עד ${formatDate(doc.expiry_date)}`}
-                        </span>
-                      )}
+                      <span className="text-xs text-slate-300">{DOC_TYPE_LABELS[doc.type] || doc.type} — {doc.name}</span>
+                      <div className="flex items-center gap-2">
+                        {doc.expiry_date && (
+                          <span className={`text-xs ${exp !== null && exp < 0 ? 'text-red-400' : exp !== null && exp < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                            {exp !== null && exp < 0 ? '⚠️ פג תוקף' : `עד ${formatDate(doc.expiry_date)}`}
+                          </span>
+                        )}
+                        {doc.url && doc.url !== '#' && (
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-blue-400 hover:underline">הורד</a>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Notes from agent */}
           {lead.notes && (
             <div>
               <p className="text-xs text-slate-500 mb-2">הערות מהסוכן</p>
@@ -186,7 +302,6 @@ function TripCard({ lead, docs, agentProfile }: {
             </div>
           )}
 
-          {/* Agent contact */}
           {agentProfile && (
             <div className="rounded-xl p-3" style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.15)' }}>
               <p className="text-xs text-blue-400 mb-2">הסוכן שלי</p>
@@ -210,6 +325,17 @@ function TripCard({ lead, docs, agentProfile }: {
           )}
         </div>
       )}
+
+      {/* Upload modal */}
+      <UploadDocModal
+        leadId={lead.id}
+        leadDest={lead.destination || 'נסיעה'}
+        open={showUpload}
+        onClose={(doc) => {
+          setShowUpload(false);
+          if (doc) onDocsUpdate(lead.id, doc);
+        }}
+      />
     </div>
   );
 }
@@ -230,24 +356,17 @@ export default function CustomerPortalPage() {
       const { data: profile } = await supabase.from('profiles').select('full_name, phone').eq('id', user.id).single();
       setUserName(profile?.full_name || user.email || '');
 
-      // Find leads matching this customer's email or phone
       let myLeads: Lead[] = [];
-      if (user.email) {
-        myLeads = await getLeadsByEmail(user.email);
-      }
-      if (myLeads.length === 0 && profile?.phone) {
-        myLeads = await getLeadsByPhone(profile.phone);
-      }
+      if (user.email) myLeads = await getLeadsByEmail(user.email);
+      if (myLeads.length === 0 && profile?.phone) myLeads = await getLeadsByPhone(profile.phone);
       setLeads(myLeads);
 
-      // Load docs + agent profiles for each lead
       const docsResult: Record<string, Document[]> = {};
       for (const lead of myLeads) {
         docsResult[lead.id] = await getDocuments(lead.id);
       }
       setDocsMap(docsResult);
 
-      // Load agent profile (first lead's agent_id)
       if (myLeads.length > 0 && myLeads[0].agent_id) {
         const { data: agent } = await supabase.from('profiles').select('full_name, phone').eq('id', myLeads[0].agent_id).single();
         if (agent) setAgentProfile(agent);
@@ -258,27 +377,29 @@ export default function CustomerPortalPage() {
     init();
   }, []);
 
+  const handleDocsUpdate = (leadId: string, newDoc: Document) => {
+    setDocsMap(prev => ({ ...prev, [leadId]: [newDoc, ...(prev[leadId] || [])] }));
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen" style={{ background: 'linear-gradient(160deg, #050a1a 0%, #0a1628 100%)' }}>
       <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
     </div>
   );
 
-  const upcomingLeads = leads.filter(l => !['returned'].includes(l.status));
+  const upcomingLeads = leads.filter(l => l.status !== 'returned');
   const pastLeads = leads.filter(l => l.status === 'returned');
   const allDocs = Object.values(docsMap).flat();
   const expiringDocs = allDocs.filter(d => { const days = daysUntil(d.expiry_date); return days !== null && days >= 0 && days <= 90; });
-  const totalPaid = leads.reduce((s, l) => s + (l.deposit_amount || 0), 0);
-  const totalDue = leads.reduce((s, l) => s + (l.total_price || 0), 0);
 
   return (
     <div className="min-h-screen p-4 md:p-6" dir="rtl"
       style={{ background: 'linear-gradient(160deg, #050a1a 0%, #0a1628 60%, #0f0a20 100%)' }}>
 
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20"
             style={{ background: 'linear-gradient(135deg,#2563eb,#7c3aed)' }}>
             <User className="w-5 h-5 text-white" />
           </div>
@@ -287,17 +408,23 @@ export default function CustomerPortalPage() {
             <p className="text-slate-400 text-sm">הנסיעות שלי עם Pacific Travel</p>
           </div>
         </div>
+        <button
+          onClick={() => signOut()}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-red-300 hover:bg-red-500/10 transition-all border border-white/10 hover:border-red-500/30"
+        >
+          <LogOut className="w-4 h-4" />
+          <span className="hidden sm:inline">התנתק</span>
+        </button>
       </div>
 
-      {/* Quick KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      {/* KPIs — 3 cards, no "total paid" */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { icon: Plane, label: 'נסיעות', value: leads.length.toString(), color: '#60a5fa' },
-          { icon: Calendar, label: 'קרובות', value: upcomingLeads.length.toString(), color: '#a78bfa' },
-          { icon: FileText, label: 'מסמכים', value: allDocs.length.toString(), color: '#34d399' },
-          { icon: Wallet, label: 'שולם סה"כ', value: `₪${totalPaid.toLocaleString()}`, color: '#fbbf24' },
-        ].map((item, i) => (
-          <div key={i} className="rounded-2xl p-4 relative overflow-hidden"
+          { icon: Plane,    label: 'נסיעות',    value: leads.length.toString(),        color: '#60a5fa' },
+          { icon: Calendar, label: 'קרובות',    value: upcomingLeads.length.toString(), color: '#a78bfa' },
+          { icon: FileText, label: 'מסמכים',   value: allDocs.length.toString(),       color: '#34d399' },
+        ].map((item) => (
+          <div key={item.label} className="rounded-2xl p-4"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2"
               style={{ background: `${item.color}22` }}>
@@ -321,23 +448,21 @@ export default function CustomerPortalPage() {
         </div>
       )}
 
+      {/* 3 tabs — no payments */}
       <Tabs defaultValue="trips" dir="rtl">
-        <TabsList className="mb-5 w-full justify-start" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <TabsTrigger value="trips" className="data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-slate-400">
-            ✈️ הנסיעות שלי ({leads.length})
+        <TabsList className="mb-5 w-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <TabsTrigger value="trips" className="flex-1 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-slate-400">
+            ✈️ נסיעות ({leads.length})
           </TabsTrigger>
-          <TabsTrigger value="documents" className="data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-slate-400">
+          <TabsTrigger value="documents" className="flex-1 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-slate-400">
             📄 מסמכים ({allDocs.length})
           </TabsTrigger>
-          <TabsTrigger value="payments" className="data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-slate-400">
-            💳 תשלומים
-          </TabsTrigger>
-          <TabsTrigger value="checklist" className="data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-slate-400">
+          <TabsTrigger value="checklist" className="flex-1 data-[state=active]:bg-blue-600/30 data-[state=active]:text-white text-slate-400">
             ✅ לנסיעה
           </TabsTrigger>
         </TabsList>
 
-        {/* ── Trips Tab ────────────────────────────────────────────────── */}
+        {/* Trips Tab */}
         <TabsContent value="trips" className="space-y-4">
           {leads.length === 0 ? (
             <div className="text-center py-16">
@@ -352,7 +477,7 @@ export default function CustomerPortalPage() {
                   <p className="text-xs text-slate-400 font-medium mb-3">נסיעות קרובות ופעילות</p>
                   <div className="space-y-3">
                     {upcomingLeads.map(l => (
-                      <TripCard key={l.id} lead={l} docs={docsMap[l.id] || []} agentProfile={agentProfile} />
+                      <TripCard key={l.id} lead={l} docs={docsMap[l.id] || []} agentProfile={agentProfile} onDocsUpdate={handleDocsUpdate} />
                     ))}
                   </div>
                 </div>
@@ -362,7 +487,7 @@ export default function CustomerPortalPage() {
                   <p className="text-xs text-slate-500 font-medium mb-3">נסיעות שהסתיימו</p>
                   <div className="space-y-3 opacity-70">
                     {pastLeads.map(l => (
-                      <TripCard key={l.id} lead={l} docs={docsMap[l.id] || []} agentProfile={agentProfile} />
+                      <TripCard key={l.id} lead={l} docs={docsMap[l.id] || []} agentProfile={agentProfile} onDocsUpdate={handleDocsUpdate} />
                     ))}
                   </div>
                 </div>
@@ -371,12 +496,13 @@ export default function CustomerPortalPage() {
           )}
         </TabsContent>
 
-        {/* ── Documents Tab ─────────────────────────────────────────────── */}
+        {/* Documents Tab */}
         <TabsContent value="documents">
           {allDocs.length === 0 ? (
             <div className="text-center py-16">
               <FileWarning className="w-12 h-12 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-400">אין מסמכים עדיין</p>
+              <p className="text-xs text-slate-600 mt-1">ניתן להעלות מסמכים מדף הנסיעות</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -391,15 +517,21 @@ export default function CustomerPortalPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold text-white">{DOC_TYPE_LABELS[doc.type] || doc.type}</p>
-                        {lead && <p className="text-xs text-slate-400 mt-0.5">✈️ {lead.destination || 'נסיעה'}</p>}
+                        <p className="text-xs text-slate-500 mt-0.5">{doc.name}</p>
+                        {lead && <p className="text-xs text-slate-500 mt-0.5">✈️ {lead.destination || 'נסיעה'}</p>}
                       </div>
-                      {doc.expiry_date && (
-                        <div className={`text-xs px-2 py-1 rounded-full font-medium ${isExpired ? 'bg-red-500/15 text-red-400' : isExpiring ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
-                          {isExpired ? '⚠️ פג תוקף' : `תוקף: ${formatDate(doc.expiry_date)}`}
-                        </div>
-                      )}
+                      <div className="flex flex-col items-end gap-1">
+                        {doc.expiry_date && (
+                          <div className={`text-xs px-2 py-1 rounded-full font-medium ${isExpired ? 'bg-red-500/15 text-red-400' : isExpiring ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'}`}>
+                            {isExpired ? '⚠️ פג תוקף' : `תוקף: ${formatDate(doc.expiry_date)}`}
+                          </div>
+                        )}
+                        {doc.url && doc.url !== '#' && (
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-blue-400 hover:underline">הורד</a>
+                        )}
+                      </div>
                     </div>
-                    
                   </div>
                 );
               })}
@@ -407,42 +539,7 @@ export default function CustomerPortalPage() {
           )}
         </TabsContent>
 
-        {/* ── Payments Tab ──────────────────────────────────────────────── */}
-        <TabsContent value="payments" className="space-y-4">
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {[
-              { label: 'סה"כ עלות', value: `₪${totalDue.toLocaleString()}`, color: '#f8fafc' },
-              { label: 'שולם', value: `₪${totalPaid.toLocaleString()}`, color: '#34d399' },
-              { label: 'יתרה', value: `₪${Math.max(totalDue - totalPaid, 0).toLocaleString()}`, color: '#fbbf24' },
-            ].map((item, i) => (
-              <div key={i} className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <p className="text-xl font-bold" style={{ color: item.color }}>{item.value}</p>
-                <p className="text-xs text-slate-400 mt-1">{item.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {leads.map(lead => lead.total_price ? (
-            <div key={lead.id} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-sm font-bold text-white">{lead.destination}</p>
-                  <p className="text-xs text-slate-400">{formatDate(lead.departure_date)}</p>
-                </div>
-                <p className="text-sm font-bold text-white">₪{lead.total_price.toLocaleString()}</p>
-              </div>
-              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
-                <div className="h-full rounded-full" style={{ width: `${Math.min(((lead.deposit_amount || 0) / lead.total_price) * 100, 100)}%`, background: 'linear-gradient(90deg,#34d399,#10b981)' }} />
-              </div>
-              <div className="flex justify-between mt-1.5 text-xs">
-                <span className="text-emerald-400">שולם ₪{(lead.deposit_amount || 0).toLocaleString()}</span>
-                <span className="text-slate-400">{Math.round(((lead.deposit_amount || 0) / lead.total_price) * 100)}%</span>
-              </div>
-            </div>
-          ) : null)}
-        </TabsContent>
-
-        {/* ── Checklist Tab ─────────────────────────────────────────────── */}
+        {/* Checklist Tab */}
         <TabsContent value="checklist">
           <ChecklistTab leads={leads} />
         </TabsContent>
@@ -463,7 +560,7 @@ function ChecklistTab({ leads }: { leads: Lead[] }) {
     { key: 'hotel', label: '🏨 אישור מלון נשמר' },
     { key: 'forex', label: '💵 מטבע חוץ / כרטיס אשראי בינלאומי' },
     { key: 'emergency', label: '📱 מספרי חירום שמורים' },
-    { key: 'luggage', label: '🧳 מגבלת כבודה בוצדקה' },
+    { key: 'luggage', label: '🧳 מגבלת כבודה בדוקה' },
     { key: 'checkin', label: '✅ צ׳ק-אין אונליין (24 שעות לפני)' },
     { key: 'transfer', label: '🚗 העברה לשדה תעופה מסודרת' },
   ];
