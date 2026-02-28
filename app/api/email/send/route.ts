@@ -3,7 +3,8 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM = 'Pacific Travel CRM <noreply@pacifictravel.co.il>';
+// TODO: Replace with verified domain email once pacifictravel.co.il is verified in Resend
+const FROM = 'Pacific Travel CRM <onboarding@resend.dev>';
 
 export async function POST(req: NextRequest) {
   try {
