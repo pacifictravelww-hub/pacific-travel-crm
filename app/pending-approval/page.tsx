@@ -32,65 +32,40 @@ export default function PendingApprovalPage() {
 
       setUserName(profile?.full_name || user.email || '');
 
-      // ── Send admin notification if not already sent ──────────────────
-      // Check if a 'new_user_pending' notification already exists for this user
-      const { data: existingNotif } = await supabase
-        .from('notifications')
-        .select('id')
-        .eq('type', 'new_user_pending')
-        .contains('data', { userId: user.id })
-        .maybeSingle();
+      // ── Send admin notification via server-side API (bypasses RLS) ──
+      const name = profile?.full_name || user.email || 'משתמש חדש';
+      try {
+        await fetch('/api/notifications/notify-admins', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            userName: name,
+            userEmail: user.email,
+          }),
+        });
+      } catch (e) {
+        console.warn('Failed to notify admins:', e);
+      }
 
-      if (!existingNotif) {
-        // Notify admins in-app
-        const { data: admins } = await supabase
-          .from('profiles')
-          .select('id, email')
-          .in('role', ['admin', 'developer'])
-          .eq('is_active', true);
-
-        if (admins && admins.length > 0) {
-          const name = profile?.full_name || user.email || 'משתמש חדש';
-
-          // In-app notifications
-          await Promise.all(
-            admins.map((admin: { id: string; email: string }) =>
-              supabase.from('notifications').insert({
-                user_id: admin.id,
-                type: 'new_user_pending',
-                title: 'משתמש חדש ממתין לאישור',
-                body: `${name} (${user.email}) נרשם וממתין לאישור`,
-                data: { userId: user.id, userName: name, userEmail: user.email },
-              })
-            )
-          );
-
-          // Email notification
-          const adminEmails = admins
-            .map((a: { email: string }) => a.email)
-            .filter(Boolean);
-
-          if (adminEmails.length > 0) {
-            try {
-              await fetch('/api/email/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  type: 'new_user_pending',
-                  to: adminEmails,
-                  data: {
-                    userName: name,
-                    userEmail: user.email,
-                    userPhone: profile?.phone,
-                    approveUrl: `${window.location.origin}/settings?tab=users`,
-                  },
-                }),
-              });
-            } catch (e) {
-              console.warn('Admin email failed:', e);
-            }
-          }
-        }
+      // ── Email notification to admin ──────────────────────────────────
+      try {
+        await fetch('/api/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'new_user_pending',
+            to: 'pacific.travel.ww@gmail.com',
+            data: {
+              userName: name,
+              userEmail: user.email,
+              userPhone: profile?.phone,
+              approveUrl: `${window.location.origin}/settings?tab=users`,
+            },
+          }),
+        });
+      } catch (e) {
+        console.warn('Admin email failed:', e);
       }
 
       // ── Poll every 10s for approval ──────────────────────────────────

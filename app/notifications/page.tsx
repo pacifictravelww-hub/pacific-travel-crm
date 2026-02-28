@@ -341,10 +341,12 @@ export default function NotificationsPage() {
   };
 
   const handleAction = (id: string, result?: string) => {
-    markAsRead(id);
     if (result === 'approved' || result === 'rejected') {
+      // Delete from DB so it doesn't reappear on refresh
+      deleteNotification(id);
       setNotifications(prev => prev.filter(n => n.id !== id));
     } else {
+      markAsRead(id);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     }
   };
