@@ -91,12 +91,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <main className="flex-1 overflow-y-auto w-full">
           {/* Agency Banner */}
-          <div className="w-full overflow-hidden relative shrink-0" style={{ height: '80px' }}>
+          <div className="w-full overflow-hidden relative shrink-0" style={{ height: '120px' }}>
             <img
               src="/banner-app.jpg"
               alt="Pacific Travel WW"
-              className="w-full h-full object-cover object-top"
-              style={{ objectPosition: 'center 30%' }}
+              className="w-full h-full"
+              style={{ objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-50/60" />
           </div>

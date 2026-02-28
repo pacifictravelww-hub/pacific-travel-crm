@@ -33,7 +33,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/lib/userContext';
 import { RoleGuard } from '@/components/RoleGuard';
-import { getAllProfiles, updateProfile, deactivateUser, Profile } from '@/lib/profile';
+import { getAllProfiles, updateProfile, deactivateUser, deleteUser, Profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 import { Camera, CheckCircle, XCircle, UserPlus, Trash2, UserX, Clock, KeyRound } from 'lucide-react';
 import { supabase as supabaseClient } from '@/lib/supabase';
@@ -288,6 +288,13 @@ export default function SettingsPage() {
     loadUsers();
   };
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const handleDeleteUser = async (id: string) => {
+    await deleteUser(id);
+    setConfirmDeleteId(null);
+    loadUsers();
+  };
+
   const [resetMsg, setResetMsg] = useState<{ id: string; msg: string } | null>(null);
   const handleSendPasswordReset = async (email: string, userId: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -489,6 +496,27 @@ export default function SettingsPage() {
                                 >
                                   <UserX className="w-4 h-4" />
                                 </Button>
+                              )}
+                              {profile?.role === 'developer' && u.id !== user?.id && (
+                                confirmDeleteId === u.id ? (
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-xs text-red-500">בטוח?</span>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(u.id)}
+                                      className="text-red-500 hover:text-red-700 h-7 px-2 text-xs">כן</Button>
+                                    <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteId(null)}
+                                      className="text-slate-500 h-7 px-2 text-xs">לא</Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setConfirmDeleteId(u.id)}
+                                    className="text-slate-400 hover:text-red-600 h-8 px-2"
+                                    title="מחק משתמש (מפתח בלבד)"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )
                               )}
                             </div>
                           </TableCell>

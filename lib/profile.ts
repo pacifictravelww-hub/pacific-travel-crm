@@ -52,3 +52,12 @@ export async function inviteUser(email: string, role: string): Promise<{ error: 
 export async function deactivateUser(id: string): Promise<{ error: Error | null }> {
   return updateProfile(id, { is_active: false });
 }
+
+export async function deleteUser(id: string): Promise<{ error: Error | null }> {
+  // Delete profile (auth user deletion requires service role — handled server-side)
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', id);
+  return { error: error as Error | null };
+}
