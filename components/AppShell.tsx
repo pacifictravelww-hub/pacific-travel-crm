@@ -8,7 +8,7 @@ import { UserProvider } from '@/lib/userContext';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 
-const PUBLIC_PATHS = ['/login', '/register', '/verify-email', '/complete-profile', '/pending-approval'];
+const PUBLIC_PATHS = ['/login', '/register', '/verify-email', '/complete-profile', '/pending-approval', '/reset-password'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
