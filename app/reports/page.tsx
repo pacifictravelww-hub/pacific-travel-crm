@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getLeads } from '@/lib/leads';
 import { Lead, LEAD_STATUS_LABELS, LeadStatus } from '@/lib/data';
+import { getDestFlag } from '@/lib/flags';
 
 const STATUS_ORDER: LeadStatus[] = ['lead', 'proposal_sent', 'paid', 'flying', 'returned'];
 const MONTH_NAMES = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
@@ -422,7 +423,7 @@ export default function ReportsPage() {
               <h3 className="text-sm font-bold text-white mb-4">יעדים מובילים</h3>
               <div className="space-y-2.5">
                 {topDests.slice(0, 5).map(([dest, data], i) => (
-                  <HBar key={i} label={dest} value={data.count} max={maxDest}
+                  <HBar key={i} label={`${getDestFlag(dest)} ${dest}`} value={data.count} max={maxDest}
                     color={`hsl(${200 + i * 20},70%,55%)`}
                     sub={data.revenue > 0 ? `₪${Math.round(data.revenue / 1000)}K` : undefined} />
                 ))}
@@ -538,7 +539,7 @@ export default function ReportsPage() {
               <h3 className="text-sm font-bold text-white mb-4">יעדים לפי כמות לידים</h3>
               <div className="space-y-2.5">
                 {topDests.map(([dest, data], i) => (
-                  <HBar key={i} label={dest} value={data.count} max={maxDest}
+                  <HBar key={i} label={`${getDestFlag(dest)} ${dest}`} value={data.count} max={maxDest}
                     color={`hsl(${170 + i * 18},65%,50%)`} />
                 ))}
                 {topDests.length === 0 && <p className="text-slate-500 text-sm text-center py-8">אין נתוני יעדים</p>}
@@ -552,7 +553,7 @@ export default function ReportsPage() {
                     style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="flex items-center gap-2">
                       <span className="text-slate-500 text-xs w-5">#{i + 1}</span>
-                      <span className="text-sm font-medium text-white">{dest}</span>
+                      <span className="text-sm font-medium text-white">{getDestFlag(dest)} {dest}</span>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-emerald-400">₪{data.revenue.toLocaleString()}</p>

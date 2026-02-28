@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { getLeadsByEmail, getLeadsByPhone, getDocuments, addDocument } from '@/lib/leads';
 import { Lead, Document, LEAD_STATUS_LABELS, VACATION_TYPE_LABELS, BOARD_BASIS_LABELS, HOTEL_LEVEL_LABELS } from '@/lib/data';
 import { signOut } from '@/lib/auth';
+import { getDestFlag } from '@/lib/flags';
 
 const MONTH_NAMES = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 
@@ -173,7 +174,7 @@ function TripCard({ lead, docs, agentProfile, onDocsUpdate }: {
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
           <div className="absolute bottom-3 right-4 flex items-center gap-2">
             <MapPin className="w-4 h-4 text-white/80" />
-            <span className="text-white font-bold text-base">{lead.destination}</span>
+            <span className="text-white font-bold text-base">{getDestFlag(lead.destination)} {lead.destination}</span>
           </div>
           {isCurrent && (
             <div className="absolute top-3 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-purple-300 animate-pulse"
@@ -188,7 +189,7 @@ function TripCard({ lead, docs, agentProfile, onDocsUpdate }: {
         {!lead.destination || imgError ? (
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="w-4 h-4 text-blue-400" />
-            <h3 className="text-lg font-bold text-white">{lead.destination || 'יעד לא צוין'}</h3>
+            <h3 className="text-lg font-bold text-white">{lead.destination ? `${getDestFlag(lead.destination)} ${lead.destination}` : 'יעד לא צוין'}</h3>
           </div>
         ) : null}
 

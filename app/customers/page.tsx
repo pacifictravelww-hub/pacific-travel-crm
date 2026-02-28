@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { getLeads } from '@/lib/leads';
+import { getDestFlag } from '@/lib/flags';
 import { Lead, LEAD_STATUS_LABELS, LEAD_STATUS_COLORS } from '@/lib/data';
 
 type SortKey = 'name' | 'totalSpent' | 'trips' | 'lastTrip';
@@ -116,7 +117,7 @@ function CustomerCard({ customer }: { customer: Customer }) {
             {customer.lastTrip?.destination && (
               <div className="flex items-center gap-1 mt-2 text-xs text-slate-500">
                 <MapPin className="w-3 h-3" />
-                <span>נסיעה אחרונה: {customer.lastTrip.destination}</span>
+                <span>נסיעה אחרונה: {getDestFlag(customer.lastTrip.destination)} {customer.lastTrip.destination}</span>
                 {customer.lastTrip.departure_date && (
                   <span>· {new Date(customer.lastTrip.departure_date).toLocaleDateString('he-IL')}</span>
                 )}
@@ -139,7 +140,7 @@ function CustomerCard({ customer }: { customer: Customer }) {
                       style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
                       <div className={`w-2 h-2 rounded-full shrink-0 ${getStatusDot(trip.status)}`} />
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs font-medium text-slate-200 truncate block">{trip.destination || 'יעד לא מוגדר'}</span>
+                        <span className="text-xs font-medium text-slate-200 truncate block">{trip.destination ? `${getDestFlag(trip.destination)} ${trip.destination}` : 'יעד לא מוגדר'}</span>
                         <span className="text-xs text-slate-500">{trip.departure_date ? new Date(trip.departure_date).toLocaleDateString('he-IL') : '—'}</span>
                       </div>
                       <Badge className={`${LEAD_STATUS_COLORS[trip.status]} border text-xs`}>{LEAD_STATUS_LABELS[trip.status]}</Badge>

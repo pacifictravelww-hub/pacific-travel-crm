@@ -23,6 +23,7 @@ import {
   WHATSAPP_TEMPLATES,
 } from '@/lib/data';
 import { getLead, updateLead, deleteLead, getDocuments, addDocument } from '@/lib/leads';
+import { getDestFlag } from '@/lib/flags';
 import { supabase } from '@/lib/supabase';
 
 const STATUS_ORDER: LeadStatus[] = ['lead', 'proposal_sent', 'paid', 'flying', 'returned'];
@@ -318,7 +319,7 @@ export default function LeadProfilePage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
               <div className="absolute bottom-3 right-4 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-white/80" />
-                <span className="text-white font-semibold text-lg">{lead.destination}</span>
+                <span className="text-white font-semibold text-lg">{getDestFlag(lead.destination)} {lead.destination}</span>
               </div>
             </div>
           )}

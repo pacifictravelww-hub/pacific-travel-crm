@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { getDestFlag } from '@/lib/flags';
 
 export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -169,7 +170,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-slate-200 truncate">{lead.name}</div>
-                        <div className="text-xs text-slate-500">{lead.destination}</div>
+                        <div className="text-xs text-slate-500">{getDestFlag(lead.destination)} {lead.destination}</div>
                       </div>
                       <div className="text-xs text-slate-400 text-right">
                         {new Date(lead.departure_date).toLocaleDateString('he-IL')}
@@ -238,7 +239,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-slate-200 text-sm">{lead.name}</div>
-                      <div className="text-xs text-slate-500">{lead.destination}</div>
+                      <div className="text-xs text-slate-500">{getDestFlag(lead.destination)} {lead.destination}</div>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusBadgeColors[lead.status]}`}>
                       {LEAD_STATUS_LABELS[lead.status]}
@@ -273,7 +274,7 @@ export default function DashboardPage() {
                         </Badge>
                       ))}
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">{lead.destination} · {lead.adults} מבוגרים {lead.children > 0 ? `· ${lead.children} ילדים` : ''}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{getDestFlag(lead.destination)} {lead.destination} · {lead.adults} מבוגרים {lead.children > 0 ? `· ${lead.children} ילדים` : ''}</div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className="text-sm font-medium text-slate-300">₪{(lead.budget || 0).toLocaleString()}</span>
