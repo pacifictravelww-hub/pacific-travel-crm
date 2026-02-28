@@ -9,11 +9,11 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
 };
 
 export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
-  lead: 'bg-gray-100 text-gray-800 border-gray-200',
-  proposal_sent: 'bg-blue-100 text-blue-800 border-blue-200',
-  paid: 'bg-green-100 text-green-800 border-green-200',
-  flying: 'bg-purple-100 text-purple-800 border-purple-200',
-  returned: 'bg-orange-100 text-orange-800 border-orange-200',
+  lead: 'bg-white/10 text-slate-200 border-white/20',
+  proposal_sent: 'bg-blue-500/15 text-blue-300 border-blue-500/25',
+  paid: 'bg-green-500/15 text-green-300 border-green-500/25',
+  flying: 'bg-purple-500/15 text-purple-300 border-purple-500/25',
+  returned: 'bg-orange-500/15 text-orange-300 border-orange-500/25',
 };
 
 export const LEAD_STATUS_BG: Record<LeadStatus, string> = {
