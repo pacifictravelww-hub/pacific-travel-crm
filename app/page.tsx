@@ -63,57 +63,45 @@ export default function DashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">+12%</Badge>
-            </div>
-            <div className="text-2xl font-bold text-slate-900">{totalLeads}</div>
-            <div className="text-sm text-slate-500 mt-1">סה&quot;כ לידים</div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl p-5 text-white relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
+          style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', boxShadow: '0 8px 32px rgba(37,99,235,0.35)' }}>
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, white, transparent)', transform: 'translate(25%, -25%)' }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-3xl font-bold">{totalLeads}</div>
+          <div className="text-blue-200 text-sm mt-1">סה״כ לידים</div>
+        </div>
 
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-green-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">+8%</Badge>
-            </div>
-            <div className="text-2xl font-bold text-slate-900">₪{totalRevenue.toLocaleString()}</div>
-            <div className="text-sm text-slate-500 mt-1">הכנסות החודש</div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl p-5 text-white relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
+          style={{ background: 'linear-gradient(135deg, #059669, #0d9488)', boxShadow: '0 8px 32px rgba(5,150,105,0.35)' }}>
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, white, transparent)', transform: 'translate(25%, -25%)' }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <DollarSign className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-3xl font-bold">₪{(totalRevenue/1000).toFixed(0)}K</div>
+          <div className="text-green-200 text-sm mt-1">הכנסות</div>
+        </div>
 
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Star className="w-5 h-5 text-purple-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">+5%</Badge>
-            </div>
-            <div className="text-2xl font-bold text-slate-900">₪{totalCommission.toLocaleString()}</div>
-            <div className="text-sm text-slate-500 mt-1">עמלות החודש</div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl p-5 text-white relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 8px 32px rgba(124,58,237,0.35)' }}>
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, white, transparent)', transform: 'translate(25%, -25%)' }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <Star className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-3xl font-bold">₪{totalCommission.toLocaleString()}</div>
+          <div className="text-purple-200 text-sm mt-1">עמלות</div>
+        </div>
 
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-orange-600" />
-              </div>
-              <Badge variant="secondary" className="text-xs">יעד: 30%</Badge>
-            </div>
-            <div className="text-2xl font-bold text-slate-900">{conversionRate}%</div>
-            <div className="text-sm text-slate-500 mt-1">אחוז המרה</div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl p-5 text-white relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-default"
+          style={{ background: 'linear-gradient(135deg, #ea580c, #f59e0b)', boxShadow: '0 8px 32px rgba(234,88,12,0.35)' }}>
+          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, white, transparent)', transform: 'translate(25%, -25%)' }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <TrendingUp className="w-5 h-5 text-white" />
+          </div>
+          <div className="text-3xl font-bold">{conversionRate}%</div>
+          <div className="text-orange-200 text-sm mt-1">אחוז המרה</div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

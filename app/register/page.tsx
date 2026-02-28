@@ -48,7 +48,8 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+    // Auto-confirm is enabled — go straight to pending approval
+    router.push('/pending-approval');
   };
 
   return (
