@@ -93,9 +93,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Mobile nav spacer — keeps banner below the fixed header on mobile */}
           <div className="md:hidden h-14 shrink-0" />
           {/* Agency Banner */}
-          <div className="w-full overflow-hidden relative shrink-0" style={{ height: '150px' }}>
+          <div className="w-full overflow-hidden relative shrink-0" style={{ height: '160px' }}>
             <img
-              src="/banner-hero-wide.jpg"
+              src="/banner-app.jpg"
               alt="Pacific Travel WW"
               className="w-full h-full"
               style={{ objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
