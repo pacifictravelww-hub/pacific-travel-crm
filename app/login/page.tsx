@@ -51,22 +51,7 @@ export default function LoginPage() {
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to top, rgba(5,10,30,0.92) 0%, rgba(5,10,30,0.3) 50%, rgba(5,10,30,0.15) 100%)' }} />
 
-        {/* Branding text on image */}
-        <div className="relative z-10 p-12 w-full text-right">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', boxShadow: '0 0 30px rgba(59,130,246,0.5)' }}>
-              <Plane className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-white">Pacific Travel</span>
-          </div>
-          <h2 className="text-4xl font-bold text-white leading-tight mb-3">
-            ברוכים הבאים<br />למערכת הניהול
-          </h2>
-          <p className="text-blue-200/70 text-lg max-w-sm">
-            נהל לידים, לקוחות, מסמכים ונסיעות — הכל במקום אחד.
-          </p>
-        </div>
+
       </div>
 
       {/* === Form Panel === */}
