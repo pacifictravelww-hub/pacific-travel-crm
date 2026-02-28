@@ -37,7 +37,7 @@ export default function Sidebar() {
   const [userEmail, setUserEmail] = useState('');
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
+
   const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
 
@@ -61,16 +61,10 @@ export default function Sidebar() {
     // Re-load when tab regains focus (after settings change)
     const onFocus = () => loadUserData();
     window.addEventListener('focus', onFocus);
-    // Load logo from storage
-    const storedLogo = localStorage.getItem('agency_logo_url');
-    if (storedLogo) setLogoUrl(storedLogo);
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'agency_logo_url' && e.newValue) setLogoUrl(e.newValue);
-    };
-    window.addEventListener('storage', onStorage);
+
     return () => {
       window.removeEventListener('focus', onFocus);
-      window.removeEventListener('storage', onStorage);
+
     };
     getUnreadCount().then(setUnreadCount);
     const interval = setInterval(() => getUnreadCount().then(setUnreadCount), 30000);
@@ -84,21 +78,7 @@ export default function Sidebar() {
 
   return (
     <aside className="w-64 bg-slate-900 text-white flex flex-col h-screen shrink-0 sticky top-0">
-      {/* Logo */}
-      <div className="p-6 border-b border-slate-700">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center overflow-hidden">
-            {logoUrl
-              ? <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
-              : <Plane className="w-5 h-5 text-white" />
-            }
-          </div>
-          <div>
-            <div className="font-bold text-white text-sm leading-tight">Pacific Travel</div>
-            
-          </div>
-        </div>
-      </div>
+
 
       {/* Agent info */}
       <div className="p-4 border-b border-slate-700">

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Users, UserCheck, Settings, Plane,
+  LayoutDashboard, Users, UserCheck, Settings,
   MessageCircle, BarChart3, FileText, Menu, X, HelpCircle, LogOut, Bell,
 } from 'lucide-react';
 import { signOut, getUserRole, UserRole } from '@/lib/auth';
@@ -30,7 +30,7 @@ export default function MobileNav() {
   const [userEmail, setUserEmail] = useState('');
   const [userDisplayName, setUserDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
+
   const [userRole, setUserRole] = useState<UserRole>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -48,9 +48,7 @@ export default function MobileNav() {
         }
       });
     });
-    // Logo from localStorage
-    const storedLogo = localStorage.getItem('agency_logo_url');
-    if (storedLogo) setLogoUrl(storedLogo);
+
   };
 
   useEffect(() => {
@@ -62,16 +60,12 @@ export default function MobileNav() {
     const onFocus = () => loadUserData();
     window.addEventListener('focus', onFocus);
 
-    // Logo update via storage event
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'agency_logo_url' && e.newValue) setLogoUrl(e.newValue);
-    };
-    window.addEventListener('storage', onStorage);
+
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', onFocus);
-      window.removeEventListener('storage', onStorage);
+
     };
   }, []);
 
@@ -90,13 +84,6 @@ export default function MobileNav() {
       {/* Top bar */}
       <header className="md:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between h-14 bg-slate-900 text-white px-4 shadow-md">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center overflow-hidden">
-            {logoUrl
-              ? <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
-              : <Plane className="w-4 h-4 text-white" />
-            }
-          </div>
-          <span className="font-bold text-sm">Pacific Travel</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -139,20 +126,8 @@ export default function MobileNav() {
           open ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        {/* Logo header */}
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center overflow-hidden">
-              {logoUrl
-                ? <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
-                : <Plane className="w-4 h-4 text-white" />
-              }
-            </div>
-            <div>
-              <div className="font-bold text-sm">Pacific Travel</div>
-              
-            </div>
-          </div>
+        {/* Header */}
+        <div className="p-4 border-b border-slate-700 flex items-center justify-end">
           <button
             onClick={() => setOpen(false)}
             className="p-1.5 rounded-lg hover:bg-slate-700 transition-colors"
