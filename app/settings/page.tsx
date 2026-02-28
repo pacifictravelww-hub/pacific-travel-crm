@@ -608,29 +608,29 @@ export default function SettingsPage() {
         <TabsContent value="integrations">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { name: 'Facebook', icon: '📘', desc: 'חבר את דף הפייסבוק שלך לניהול לידים', connected: false },
-              { name: 'WhatsApp', icon: '💬', desc: 'שלח הודעות WhatsApp ישירות מהמערכת', connected: false },
-              { name: 'Google Calendar', icon: '📅', desc: 'סנכרן פגישות עם Google Calendar', connected: false },
+              { name: 'Facebook', icon: '📘', desc: 'חבר את דף הפייסבוק שלך לניהול לידים', connected: false, color: 'rgba(59,130,246,' },
+              { name: 'WhatsApp', icon: '💬', desc: 'שלח הודעות WhatsApp ישירות מהמערכת', connected: false, color: 'rgba(52,211,153,' },
+              { name: 'Google Calendar', icon: '📅', desc: 'סנכרן פגישות עם Google Calendar', connected: false, color: 'rgba(251,146,60,' },
             ].map((integration) => (
-              <Card key={integration.name}>
-                <CardHeader>
-                  <div className="text-3xl mb-2">{integration.icon}</div>
-                  <CardTitle className="text-lg text-white">{integration.name}</CardTitle>
-                  <CardDescription className="text-slate-400">{integration.desc}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <span className={`flex items-center gap-1 text-sm ${integration.connected ? 'text-green-400' : 'text-slate-400'}`}>
-                      {integration.connected ? (
-                        <><CheckCircle className="w-4 h-4" /> מחובר</>
-                      ) : (
-                        <><XCircle className="w-4 h-4" /> לא מחובר</>
-                      )}
-                    </span>
-                    <Button variant="outline" size="sm">חבר</Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <div key={integration.name} className="rounded-2xl p-5 transition-all hover:border-blue-500/25"
+                style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3"
+                  style={{ background: `${integration.color}0.15)`, border: `1px solid ${integration.color}0.25)` }}>
+                  {integration.icon}
+                </div>
+                <h3 className="font-bold text-white text-lg">{integration.name}</h3>
+                <p className="text-sm text-slate-400 mt-1 mb-4">{integration.desc}</p>
+                <div className="flex items-center justify-between">
+                  <span className={`flex items-center gap-1 text-sm ${integration.connected ? 'text-green-400' : 'text-slate-500'}`}>
+                    {integration.connected ? (
+                      <><CheckCircle className="w-4 h-4" /> מחובר</>
+                    ) : (
+                      <><XCircle className="w-4 h-4" /> לא מחובר</>
+                    )}
+                  </span>
+                  <Button size="sm" className="bg-white/10 border border-white/15 text-white hover:bg-white/15">חבר</Button>
+                </div>
+              </div>
             ))}
           </div>
         </TabsContent>
