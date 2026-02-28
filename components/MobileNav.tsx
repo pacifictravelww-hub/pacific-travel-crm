@@ -7,8 +7,9 @@ import {
   LayoutDashboard, Users, UserCheck, Settings, Plane,
   MessageCircle, BarChart3, FileText, Menu, X, HelpCircle, LogOut, Bell,
 } from 'lucide-react';
-import { signOut } from '@/lib/auth';
+import { signOut, getUserRole, UserRole } from '@/lib/auth';
 import { getUnreadCount } from '@/lib/notifications';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -26,13 +27,52 @@ const navItems = [
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userEmail, setUserEmail] = useState('');
+  const [userDisplayName, setUserDisplayName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [userRole, setUserRole] = useState<UserRole>(null);
   const pathname = usePathname();
   const router = useRouter();
 
+  const loadUserData = () => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      setUserEmail(user.email || '');
+      // Load profile: name, avatar, role
+      supabase.from('profiles').select('full_name, avatar_url, role').eq('id', user.id).single().then(({ data }) => {
+        if (data) {
+          setUserDisplayName(data.full_name || user.email || '');
+          setAvatarUrl(data.avatar_url || '');
+          setUserRole(data.role as UserRole || null);
+        }
+      });
+    });
+    // Logo from localStorage
+    const storedLogo = localStorage.getItem('agency_logo_url');
+    if (storedLogo) setLogoUrl(storedLogo);
+  };
+
   useEffect(() => {
+    loadUserData();
     getUnreadCount().then(setUnreadCount);
     const interval = setInterval(() => getUnreadCount().then(setUnreadCount), 30000);
-    return () => clearInterval(interval);
+
+    // Re-load on focus
+    const onFocus = () => loadUserData();
+    window.addEventListener('focus', onFocus);
+
+    // Logo update via storage event
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'agency_logo_url' && e.newValue) setLogoUrl(e.newValue);
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -41,20 +81,25 @@ export default function MobileNav() {
     router.push('/login');
   };
 
+  const initials = userDisplayName
+    ? userDisplayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : userEmail.slice(0, 2).toUpperCase();
+
   return (
     <>
-      {/* Top bar — visible on mobile only */}
+      {/* Top bar */}
       <header className="md:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between h-14 bg-slate-900 text-white px-4 shadow-md">
-        {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            <Plane className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center overflow-hidden">
+            {logoUrl
+              ? <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
+              : <Plane className="w-4 h-4 text-white" />
+            }
           </div>
           <span className="font-bold text-sm">Pacific Travel</span>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Bell icon */}
           <Link href="/notifications" className="relative p-2 rounded-lg hover:bg-slate-700 transition-colors">
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -63,8 +108,6 @@ export default function MobileNav() {
               </span>
             )}
           </Link>
-
-          {/* Hamburger */}
           <button
             onClick={() => setOpen(true)}
             className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
@@ -75,7 +118,6 @@ export default function MobileNav() {
         </div>
       </header>
 
-      {/* Spacer so content isn't hidden behind fixed header */}
       <div className="md:hidden h-14" />
 
       {/* Backdrop */}
@@ -90,18 +132,21 @@ export default function MobileNav() {
         tabIndex={-1}
       />
 
-      {/* Slide-in drawer from right (RTL) */}
+      {/* Drawer */}
       <aside
         className={cn(
           'md:hidden fixed top-0 right-0 z-50 h-full w-72 bg-slate-900 text-white flex flex-col transition-transform duration-300 ease-in-out shadow-2xl',
           open ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        {/* Drawer header */}
+        {/* Logo header */}
         <div className="p-4 border-b border-slate-700 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center">
-              <Plane className="w-4 h-4 text-white" />
+            <div className="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center overflow-hidden">
+              {logoUrl
+                ? <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
+                : <Plane className="w-4 h-4 text-white" />
+              }
             </div>
             <div>
               <div className="font-bold text-sm">Pacific Travel</div>
@@ -117,22 +162,30 @@ export default function MobileNav() {
           </button>
         </div>
 
-        {/* Agent info */}
+        {/* User info */}
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-xs font-bold">
-              רי
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+              {avatarUrl
+                ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                : <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-bold">{initials}</div>
+              }
             </div>
-            <div>
-              <div className="text-sm font-medium">רינה כהן</div>
-              <div className="text-xs text-slate-400">סוכן נסיעות</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate">{userDisplayName || userEmail}</div>
+              <div className="text-xs text-slate-400 flex items-center gap-1">
+                {userRole === 'developer' && <span className="text-purple-400">👑 Developer</span>}
+                {userRole === 'admin' && <span className="text-yellow-400">⭐ Admin</span>}
+                {(userRole === 'agent' || !userRole) && <span>סוכן נסיעות</span>}
+                {userRole === 'customer' && <span>לקוח</span>}
+              </div>
             </div>
-            <div className="mr-auto w-2 h-2 bg-green-400 rounded-full" />
+            <div className="w-2 h-2 bg-green-400 rounded-full shrink-0" />
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href ||
@@ -151,12 +204,6 @@ export default function MobileNav() {
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{item.label}</span>
-                {item.href === '/leads' && (
-                  <span className={cn(
-                    'mr-auto text-xs px-1.5 py-0.5 rounded-full',
-                    isActive ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300'
-                  )}>6</span>
-                )}
                 {item.href === '/notifications' && unreadCount > 0 && (
                   <span className="mr-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                     {unreadCount}
