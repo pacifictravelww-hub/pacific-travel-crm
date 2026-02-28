@@ -364,7 +364,7 @@ export default function ReportsPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" dir="rtl">
-        <TabsList className="mb-6 w-full overflow-x-auto flex-nowrap"
+        <TabsList className="mb-6 w-full flex flex-wrap gap-2 h-auto p-2"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {[
             { value: 'overview', label: 'סקירה כללית' },
@@ -374,7 +374,7 @@ export default function ReportsPage() {
             { value: 'trends', label: 'מגמות' },
           ].map(t => (
             <TabsTrigger key={t.value} value={t.value}
-              className="text-slate-400 data-[state=active]:text-white data-[state=active]:bg-blue-600/30 shrink-0">
+              className="text-slate-400 data-[state=active]:text-white data-[state=active]:bg-blue-600/30 text-sm px-3 py-1.5">
               {t.label}
             </TabsTrigger>
           ))}
