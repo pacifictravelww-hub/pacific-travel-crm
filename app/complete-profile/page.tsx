@@ -98,7 +98,7 @@ export default function CompleteProfilePage() {
 
       {/* === Hero Panel === */}
       <div className="hidden md:flex md:w-1/2 lg:w-3/5 relative overflow-hidden flex-col items-center justify-end">
-        <Image src="/banner.jpg" alt="Pacific Travel" fill className="object-cover" priority />
+        <Image src="/banner-hero.jpg" alt="Pacific Travel" fill className="object-cover" priority />
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to top, rgba(5,10,30,0.92) 0%, rgba(5,10,30,0.3) 50%, rgba(5,10,30,0.15) 100%)' }} />
         <div className="relative z-10 p-12 w-full text-right">
@@ -127,7 +127,7 @@ export default function CompleteProfilePage() {
 
         {/* Mobile banner */}
         <div className="md:hidden absolute top-0 left-0 right-0 h-48 overflow-hidden">
-          <Image src="/banner.jpg" alt="Pacific Travel" fill className="object-cover object-center" priority />
+          <Image src="/banner-hero.jpg" alt="Pacific Travel" fill className="object-cover object-center" priority />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,15,30,0.3) 0%, rgba(10,15,30,1) 100%)' }} />
           <div className="absolute bottom-4 right-4 flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center"
