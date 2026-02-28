@@ -53,7 +53,7 @@ export function emailLayout(content: string, previewText = ''): string {
 
               <!-- Footer -->
               <p style="color:#475569;font-size:12px;text-align:center;margin:20px 0 0;">
-                Pacific Travel WW &middot; CRM System<br>
+                Pacific Travel WW<br>
                 <a href="https://pacific-travel.vercel.app" style="color:#3b82f6;text-decoration:none;">pacific-travel.vercel.app</a>
               </p>
             </td>

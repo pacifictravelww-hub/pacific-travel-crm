@@ -150,7 +150,7 @@ export default function MobileNav() {
             </div>
             <div>
               <div className="font-bold text-sm">Pacific Travel</div>
-              <div className="text-xs text-slate-400">CRM System</div>
+              
             </div>
           </div>
           <button

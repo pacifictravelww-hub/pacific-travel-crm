@@ -65,6 +65,8 @@ export default function ResetPasswordPage() {
         <Image src="/banner-hero.jpg" alt="Pacific Travel" fill className="object-cover" priority />
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to top, rgba(5,10,30,0.85) 0%, rgba(5,10,30,0.2) 100%)' }} />
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(to right, rgba(10,15,30,1) 0%, rgba(15,26,56,0.8) 8%, transparent 35%)' }} />
       </div>
 
       {/* Form */}
@@ -165,7 +167,7 @@ export default function ResetPasswordPage() {
             </>
           )}
 
-          <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW · CRM System</p>
+          <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW</p>
         </div>
       </div>
     </div>

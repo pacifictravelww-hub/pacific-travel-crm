@@ -127,7 +127,7 @@ export default function RegisterPage() {
               חזור ונסה שוב
             </button>
           </div>
-          <p className="text-slate-700 text-xs mt-6">Pacific Travel WW · CRM System</p>
+          <p className="text-slate-700 text-xs mt-6">Pacific Travel WW</p>
         </div>
       </div>
     );
@@ -142,6 +142,8 @@ export default function RegisterPage() {
         <Image src="/banner-hero.jpg" alt="Pacific Travel" fill className="object-cover" priority />
         <div className="absolute inset-0"
           style={{ background: 'linear-gradient(to top, rgba(5,10,30,0.92) 0%, rgba(5,10,30,0.3) 50%, rgba(5,10,30,0.15) 100%)' }} />
+        <div className="absolute inset-0"
+          style={{ background: 'linear-gradient(to right, rgba(10,15,30,1) 0%, rgba(15,26,56,0.8) 8%, transparent 35%)' }} />
         <div className="relative z-10 p-12 w-full text-right">
           <div className="inline-flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center"
@@ -296,7 +298,7 @@ export default function RegisterPage() {
               <Link href="/login" className="text-blue-400 hover:text-blue-300 transition-colors">התחבר כאן</Link>
             </p>
           </div>
-          <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW · CRM System</p>
+          <p className="text-center text-slate-700 text-xs mt-6">Pacific Travel WW</p>
         </div>
       </div>
     </div>

@@ -95,7 +95,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div className="font-bold text-white text-sm leading-tight">Pacific Travel</div>
-            <div className="text-slate-400 text-xs">CRM System</div>
+            
           </div>
         </div>
       </div>

@@ -166,7 +166,7 @@ function VerifyEmailContent() {
 
         {/* Pacific Travel branding */}
         <div className="text-center mt-6">
-          <p className="text-slate-600 text-xs">Pacific Travel WW · CRM System</p>
+          <p className="text-slate-600 text-xs">Pacific Travel WW</p>
         </div>
       </div>
     </div>
