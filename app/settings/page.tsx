@@ -341,9 +341,13 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-bold text-slate-800 mb-6">הגדרות</h1>
 
       <Tabs defaultValue="profile" dir="rtl">
-        <TabsList className="mb-6 w-full justify-end flex-row-reverse">
+        <TabsList className="mb-6 w-full justify-start">
           <TabsTrigger value="profile">פרופיל</TabsTrigger>
-          <TabsTrigger value="users" onClick={loadUsers}>ניהול משתמשים</TabsTrigger>
+          <TabsTrigger value="general">כללי</TabsTrigger>
+          <TabsTrigger value="integrations">אינטגרציות</TabsTrigger>
+          {(profile?.role === 'admin' || profile?.role === 'developer') && (
+            <TabsTrigger value="users" onClick={loadUsers}>ניהול משתמשים</TabsTrigger>
+          )}
           {(profile?.role === 'admin' || profile?.role === 'developer') && (
             <TabsTrigger value="approvals" onClick={loadPendingUsers}>
               אישורים ממתינים
@@ -352,8 +356,6 @@ export default function SettingsPage() {
               )}
             </TabsTrigger>
           )}
-          <TabsTrigger value="integrations">אינטגרציות</TabsTrigger>
-          <TabsTrigger value="general">כללי</TabsTrigger>
         </TabsList>
 
         {/* Profile Tab */}

@@ -9,6 +9,7 @@ import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
 
 const PUBLIC_PATHS = ['/login', '/register', '/verify-email', '/complete-profile', '/pending-approval', '/reset-password'];
+const CUSTOMER_PATHS = ['/customer-portal'];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       // Check profile status
       const { data: profile } = await supabase
         .from('profiles')
-        .select('status')
+        .select('status, role')
         .eq('id', session.user.id)
         .single();
 
@@ -44,6 +45,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       if (profile.status === 'pending') {
         router.replace('/pending-approval');
+        return;
+      }
+
+      // Customers see only their portal
+      if (profile.role === 'customer' && !CUSTOMER_PATHS.some(p => pathname.startsWith(p))) {
+        router.replace('/customer-portal');
         return;
       }
 
@@ -79,6 +86,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
       </div>
     );
+  }
+
+  // Customer portal — no sidebar/nav
+  if (CUSTOMER_PATHS.some(p => pathname.startsWith(p))) {
+    return <>{children}</>;
   }
 
   // Authenticated app shell

@@ -168,3 +168,27 @@ export async function addDocument(doc: Omit<Document, 'id' | 'uploaded_at'>): Pr
     return null
   }
 }
+
+export async function getLeadsByEmail(email: string): Promise<Lead[]> {
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('email', email)
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return (data as Lead[]) || [];
+  } catch { return []; }
+}
+
+export async function getLeadsByPhone(phone: string): Promise<Lead[]> {
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .eq('phone', phone)
+      .order('created_at', { ascending: false });
+    if (error) return [];
+    return (data as Lead[]) || [];
+  } catch { return []; }
+}
